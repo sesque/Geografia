@@ -1,0 +1,502 @@
+[
+  {
+    "id": "01",
+    "name_es": "Álava",
+    "name_en": "Álava",
+    "capital_es": "Vitoria-Gasteiz",
+    "capital_en": "Vitoria-Gasteiz",
+    "ccaa_id": "pais_vasco",
+    "capital_lat": 42.8467,
+    "capital_lon": -2.6716
+  },
+  {
+    "id": "02",
+    "name_es": "Albacete",
+    "name_en": "Albacete",
+    "capital_es": "Albacete",
+    "capital_en": "Albacete",
+    "ccaa_id": "castilla_la_mancha",
+    "capital_lat": 38.9943,
+    "capital_lon": -1.8585
+  },
+  {
+    "id": "03",
+    "name_es": "Alicante",
+    "name_en": "Alicante",
+    "capital_es": "Alicante",
+    "capital_en": "Alicante",
+    "ccaa_id": "comunidad_valenciana",
+    "capital_lat": 38.3452,
+    "capital_lon": -0.4815
+  },
+  {
+    "id": "04",
+    "name_es": "Almería",
+    "name_en": "Almería",
+    "capital_es": "Almería",
+    "capital_en": "Almería",
+    "ccaa_id": "andalucia",
+    "capital_lat": 36.8340,
+    "capital_lon": -2.4637
+  },
+  {
+    "id": "05",
+    "name_es": "Ávila",
+    "name_en": "Ávila",
+    "capital_es": "Ávila",
+    "capital_en": "Ávila",
+    "ccaa_id": "castilla_y_leon",
+    "capital_lat": 40.6565,
+    "capital_lon": -4.6818
+  },
+  {
+    "id": "06",
+    "name_es": "Badajoz",
+    "name_en": "Badajoz",
+    "capital_es": "Badajoz",
+    "capital_en": "Badajoz",
+    "ccaa_id": "extremadura",
+    "capital_lat": 38.8794,
+    "capital_lon": -6.9707
+  },
+  {
+    "id": "07",
+    "name_es": "Islas Baleares",
+    "name_en": "Balearic Islands",
+    "capital_es": "Palma",
+    "capital_en": "Palma",
+    "ccaa_id": "islas_baleares",
+    "capital_lat": 39.5696,
+    "capital_lon": 2.6502
+  },
+  {
+    "id": "08",
+    "name_es": "Barcelona",
+    "name_en": "Barcelona",
+    "capital_es": "Barcelona",
+    "capital_en": "Barcelona",
+    "ccaa_id": "cataluna",
+    "capital_lat": 41.3874,
+    "capital_lon": 2.1686
+  },
+  {
+    "id": "09",
+    "name_es": "Burgos",
+    "name_en": "Burgos",
+    "capital_es": "Burgos",
+    "capital_en": "Burgos",
+    "ccaa_id": "castilla_y_leon",
+    "capital_lat": 42.3439,
+    "capital_lon": -3.6969
+  },
+  {
+    "id": "10",
+    "name_es": "Cáceres",
+    "name_en": "Cáceres",
+    "capital_es": "Cáceres",
+    "capital_en": "Cáceres",
+    "ccaa_id": "extremadura",
+    "capital_lat": 39.4753,
+    "capital_lon": -6.3724
+  },
+  {
+    "id": "11",
+    "name_es": "Cádiz",
+    "name_en": "Cádiz",
+    "capital_es": "Cádiz",
+    "capital_en": "Cádiz",
+    "ccaa_id": "andalucia",
+    "capital_lat": 36.5271,
+    "capital_lon": -6.2886
+  },
+  {
+    "id": "12",
+    "name_es": "Castellón",
+    "name_en": "Castellón",
+    "capital_es": "Castellón de la Plana",
+    "capital_en": "Castellón de la Plana",
+    "ccaa_id": "comunidad_valenciana",
+    "capital_lat": 39.9864,
+    "capital_lon": -0.0513
+  },
+  {
+    "id": "13",
+    "name_es": "Ciudad Real",
+    "name_en": "Ciudad Real",
+    "capital_es": "Ciudad Real",
+    "capital_en": "Ciudad Real",
+    "ccaa_id": "castilla_la_mancha",
+    "capital_lat": 38.9863,
+    "capital_lon": -3.9291
+  },
+  {
+    "id": "14",
+    "name_es": "Córdoba",
+    "name_en": "Córdoba",
+    "capital_es": "Córdoba",
+    "capital_en": "Córdoba",
+    "ccaa_id": "andalucia",
+    "capital_lat": 37.8882,
+    "capital_lon": -4.7794
+  },
+  {
+    "id": "15",
+    "name_es": "A Coruña",
+    "name_en": "A Coruña",
+    "capital_es": "A Coruña",
+    "capital_en": "A Coruña",
+    "ccaa_id": "galicia",
+    "capital_lat": 43.3623,
+    "capital_lon": -8.4115
+  },
+  {
+    "id": "16",
+    "name_es": "Cuenca",
+    "name_en": "Cuenca",
+    "capital_es": "Cuenca",
+    "capital_en": "Cuenca",
+    "ccaa_id": "castilla_la_mancha",
+    "capital_lat": 40.0704,
+    "capital_lon": -2.1374
+  },
+  {
+    "id": "17",
+    "name_es": "Girona",
+    "name_en": "Girona",
+    "capital_es": "Girona",
+    "capital_en": "Girona",
+    "ccaa_id": "cataluna",
+    "capital_lat": 41.9794,
+    "capital_lon": 2.8214
+  },
+  {
+    "id": "18",
+    "name_es": "Granada",
+    "name_en": "Granada",
+    "capital_es": "Granada",
+    "capital_en": "Granada",
+    "ccaa_id": "andalucia",
+    "capital_lat": 37.1773,
+    "capital_lon": -3.5986
+  },
+  {
+    "id": "19",
+    "name_es": "Guadalajara",
+    "name_en": "Guadalajara",
+    "capital_es": "Guadalajara",
+    "capital_en": "Guadalajara",
+    "ccaa_id": "castilla_la_mancha",
+    "capital_lat": 40.6296,
+    "capital_lon": -3.1669
+  },
+  {
+    "id": "20",
+    "name_es": "Guipúzcoa",
+    "name_en": "Guipúzcoa",
+    "capital_es": "Donostia-San Sebastián",
+    "capital_en": "San Sebastián",
+    "ccaa_id": "pais_vasco",
+    "capital_lat": 43.3183,
+    "capital_lon": -1.9812
+  },
+  {
+    "id": "21",
+    "name_es": "Huelva",
+    "name_en": "Huelva",
+    "capital_es": "Huelva",
+    "capital_en": "Huelva",
+    "ccaa_id": "andalucia",
+    "capital_lat": 37.2614,
+    "capital_lon": -6.9447
+  },
+  {
+    "id": "22",
+    "name_es": "Huesca",
+    "name_en": "Huesca",
+    "capital_es": "Huesca",
+    "capital_en": "Huesca",
+    "ccaa_id": "aragon",
+    "capital_lat": 42.1401,
+    "capital_lon": -0.4089
+  },
+  {
+    "id": "23",
+    "name_es": "Jaén",
+    "name_en": "Jaén",
+    "capital_es": "Jaén",
+    "capital_en": "Jaén",
+    "ccaa_id": "andalucia",
+    "capital_lat": 37.7796,
+    "capital_lon": -3.7849
+  },
+  {
+    "id": "24",
+    "name_es": "León",
+    "name_en": "León",
+    "capital_es": "León",
+    "capital_en": "León",
+    "ccaa_id": "castilla_y_leon",
+    "capital_lat": 42.5987,
+    "capital_lon": -5.5671
+  },
+  {
+    "id": "25",
+    "name_es": "Lleida",
+    "name_en": "Lleida",
+    "capital_es": "Lleida",
+    "capital_en": "Lleida",
+    "ccaa_id": "cataluna",
+    "capital_lat": 41.6176,
+    "capital_lon": 0.6200
+  },
+  {
+    "id": "26",
+    "name_es": "La Rioja",
+    "name_en": "La Rioja",
+    "capital_es": "Logroño",
+    "capital_en": "Logroño",
+    "ccaa_id": "la_rioja",
+    "capital_lat": 42.4627,
+    "capital_lon": -2.4449
+  },
+  {
+    "id": "27",
+    "name_es": "Lugo",
+    "name_en": "Lugo",
+    "capital_es": "Lugo",
+    "capital_en": "Lugo",
+    "ccaa_id": "galicia",
+    "capital_lat": 43.0097,
+    "capital_lon": -7.5567
+  },
+  {
+    "id": "28",
+    "name_es": "Madrid",
+    "name_en": "Madrid",
+    "capital_es": "Madrid",
+    "capital_en": "Madrid",
+    "ccaa_id": "comunidad_de_madrid",
+    "capital_lat": 40.4168,
+    "capital_lon": -3.7038
+  },
+  {
+    "id": "29",
+    "name_es": "Málaga",
+    "name_en": "Málaga",
+    "capital_es": "Málaga",
+    "capital_en": "Málaga",
+    "ccaa_id": "andalucia",
+    "capital_lat": 36.7213,
+    "capital_lon": -4.4213
+  },
+  {
+    "id": "30",
+    "name_es": "Murcia",
+    "name_en": "Murcia",
+    "capital_es": "Murcia",
+    "capital_en": "Murcia",
+    "ccaa_id": "region_de_murcia",
+    "capital_lat": 37.9922,
+    "capital_lon": -1.1307
+  },
+  {
+    "id": "31",
+    "name_es": "Navarra",
+    "name_en": "Navarre",
+    "capital_es": "Pamplona",
+    "capital_en": "Pamplona",
+    "ccaa_id": "comunidad_foral_de_navarra",
+    "capital_lat": 42.8125,
+    "capital_lon": -1.6458
+  },
+  {
+    "id": "32",
+    "name_es": "Ourense",
+    "name_en": "Ourense",
+    "capital_es": "Ourense",
+    "capital_en": "Ourense",
+    "ccaa_id": "galicia",
+    "capital_lat": 42.3358,
+    "capital_lon": -7.8639
+  },
+  {
+    "id": "33",
+    "name_es": "Asturias",
+    "name_en": "Asturias",
+    "capital_es": "Oviedo",
+    "capital_en": "Oviedo",
+    "ccaa_id": "asturias",
+    "capital_lat": 43.3619,
+    "capital_lon": -5.8494
+  },
+  {
+    "id": "34",
+    "name_es": "Palencia",
+    "name_en": "Palencia",
+    "capital_es": "Palencia",
+    "capital_en": "Palencia",
+    "ccaa_id": "castilla_y_leon",
+    "capital_lat": 42.0095,
+    "capital_lon": -4.5284
+  },
+  {
+    "id": "35",
+    "name_es": "Las Palmas",
+    "name_en": "Las Palmas",
+    "capital_es": "Las Palmas de Gran Canaria",
+    "capital_en": "Las Palmas de Gran Canaria",
+    "ccaa_id": "canarias",
+    "capital_lat": 28.1235,
+    "capital_lon": -15.4363
+  },
+  {
+    "id": "36",
+    "name_es": "Pontevedra",
+    "name_en": "Pontevedra",
+    "capital_es": "Pontevedra",
+    "capital_en": "Pontevedra",
+    "ccaa_id": "galicia",
+    "capital_lat": 42.4310,
+    "capital_lon": -8.6444
+  },
+  {
+    "id": "37",
+    "name_es": "Salamanca",
+    "name_en": "Salamanca",
+    "capital_es": "Salamanca",
+    "capital_en": "Salamanca",
+    "ccaa_id": "castilla_y_leon",
+    "capital_lat": 40.9701,
+    "capital_lon": -5.6635
+  },
+  {
+    "id": "38",
+    "name_es": "Santa Cruz de Tenerife",
+    "name_en": "Santa Cruz de Tenerife",
+    "capital_es": "Santa Cruz de Tenerife",
+    "capital_en": "Santa Cruz de Tenerife",
+    "ccaa_id": "canarias",
+    "capital_lat": 28.4636,
+    "capital_lon": -16.2518
+  },
+  {
+    "id": "39",
+    "name_es": "Cantabria",
+    "name_en": "Cantabria",
+    "capital_es": "Santander",
+    "capital_en": "Santander",
+    "ccaa_id": "cantabria",
+    "capital_lat": 43.4623,
+    "capital_lon": -3.8099
+  },
+  {
+    "id": "40",
+    "name_es": "Segovia",
+    "name_en": "Segovia",
+    "capital_es": "Segovia",
+    "capital_en": "Segovia",
+    "ccaa_id": "castilla_y_leon",
+    "capital_lat": 40.9429,
+    "capital_lon": -4.1088
+  },
+  {
+    "id": "41",
+    "name_es": "Sevilla",
+    "name_en": "Seville",
+    "capital_es": "Sevilla",
+    "capital_en": "Seville",
+    "ccaa_id": "andalucia",
+    "capital_lat": 37.3891,
+    "capital_lon": -5.9845
+  },
+  {
+    "id": "42",
+    "name_es": "Soria",
+    "name_en": "Soria",
+    "capital_es": "Soria",
+    "capital_en": "Soria",
+    "ccaa_id": "castilla_y_leon",
+    "capital_lat": 41.7666,
+    "capital_lon": -2.4790
+  },
+  {
+    "id": "43",
+    "name_es": "Tarragona",
+    "name_en": "Tarragona",
+    "capital_es": "Tarragona",
+    "capital_en": "Tarragona",
+    "ccaa_id": "cataluna",
+    "capital_lat": 41.1189,
+    "capital_lon": 1.2445
+  },
+  {
+    "id": "44",
+    "name_es": "Teruel",
+    "name_en": "Teruel",
+    "capital_es": "Teruel",
+    "capital_en": "Teruel",
+    "ccaa_id": "aragon",
+    "capital_lat": 40.3440,
+    "capital_lon": -1.1069
+  },
+  {
+    "id": "45",
+    "name_es": "Toledo",
+    "name_en": "Toledo",
+    "capital_es": "Toledo",
+    "capital_en": "Toledo",
+    "ccaa_id": "castilla_la_mancha",
+    "capital_lat": 39.8628,
+    "capital_lon": -4.0273
+  },
+  {
+    "id": "46",
+    "name_es": "Valencia",
+    "name_en": "Valencia",
+    "capital_es": "Valencia",
+    "capital_en": "Valencia",
+    "ccaa_id": "comunidad_valenciana",
+    "capital_lat": 39.4699,
+    "capital_lon": -0.3763
+  },
+  {
+    "id": "47",
+    "name_es": "Valladolid",
+    "name_en": "Valladolid",
+    "capital_es": "Valladolid",
+    "capital_en": "Valladolid",
+    "ccaa_id": "castilla_y_leon",
+    "capital_lat": 41.6521,
+    "capital_lon": -4.7245
+  },
+  {
+    "id": "48",
+    "name_es": "Vizcaya",
+    "name_en": "Biscay",
+    "capital_es": "Bilbao",
+    "capital_en": "Bilbao",
+    "ccaa_id": "pais_vasco",
+    "capital_lat": 43.2630,
+    "capital_lon": -2.9350
+  },
+  {
+    "id": "49",
+    "name_es": "Zamora",
+    "name_en": "Zamora",
+    "capital_es": "Zamora",
+    "capital_en": "Zamora",
+    "ccaa_id": "castilla_y_leon",
+    "capital_lat": 41.5033,
+    "capital_lon": -5.7446
+  },
+  {
+    "id": "50",
+    "name_es": "Zaragoza",
+    "name_en": "Zaragoza",
+    "capital_es": "Zaragoza",
+    "capital_en": "Zaragoza",
+    "ccaa_id": "aragon",
+    "capital_lat": 41.6488,
+    "capital_lon": -0.8891
+  }
+]

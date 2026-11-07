@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GeoMap test</title>
+<link rel="stylesheet" href="../css/map.css">
+<style>
+:root{--bg:#f6f4ef;--ink:#1d2433;--line:#d9d5ca}
+:root[data-theme="dark"]{--bg:#161a22;--ink:#e8eaf0;--line:#333b4d}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161a22;--ink:#e8eaf0;--line:#333b4d}}
+body{margin:0;padding:12px;font:14px system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+select,button,input{font:inherit;padding:4px 8px}
+#wrap{max-width:var(--w,900px)}
+#log{margin-top:8px;font-size:13px;min-height:1.4em}
+</style>
+</head>
+<body>
+<div class="bar">
+  <select id="view"><option>spain</option><option>europa</option><option>america</option><option>asia</option><option>oceania</option><option>africa</option></select>
+  <select id="layer"><option>provincias</option><option>ccaa</option><option>world</option></select>
+  <select id="mode"><option>show</option><option>locate</option></select>
+  <input id="target" placeholder="target id" size="8">
+  <label>wrong <input id="clicked" size="6"></label>
+  <button id="go">Go</button>
+  <button id="theme">Theme</button>
+  <button id="lang">ES/EN</button>
+</div>
+<div id="wrap"></div>
+<div id="log"></div>
+<script src="../js/vendor/d3.min.js"></script>
+<script src="../js/vendor/topojson-client.min.js"></script>
+<script src="../data/bundle.js"></script>
+<script src="../js/map.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+let lang = 'es';
+let map = GeoMap.create($('wrap'), { lang });
+const CITIES = { '724': null };
+function cityFor(layer, id) {
+  const G = GeoData;
+  if (layer === 'world') { const p = G.paises.find(x => x.iso_n3 === id); return p && { lat: p.capital_lat, lon: p.capital_lon, name: { es: p.capital_es, en: p.capital_en } }; }
+  if (layer === 'provincias') { const p = G.provincias.find(x => x.id === id); return p && { lat: p.capital_lat, lon: p.capital_lon, name: { es: p.capital_es, en: p.capital_en } }; }
+  return null;
+}
+function run(p) {
+  const view = p.view, layer = p.layer || (view === 'spain' ? 'provincias' : 'world');
+  $('view').value = view; $('layer').value = layer; $('mode').value = p.mode || 'show';
+  $('target').value = p.target || ''; $('clicked').value = p.clicked || '';
+  const city = p.city === false ? null : cityFor(layer, p.target);
+  if (p.mode === 'locate') {
+    map.locate({ view, layer, onPick: id => { $('log').textContent = 'picked ' + id; window.__picked = id; if (p.target) map.reveal({ targetId: p.target, clickedId: id }); } });
+  } else {
+    map.show({ view, layer, targetId: p.target, city, clickedId: p.clicked || null, correct: p.correct });
+  }
+}
+$('go').onclick = () => run({ view: $('view').value, layer: $('layer').value, mode: $('mode').value, target: $('target').value, clicked: $('clicked').value });
+$('theme').onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark'; };
+$('lang').onclick = () => { lang = lang === 'es' ? 'en' : 'es'; map.setLang(lang); };
+window.__run = run; window.__map = map;
+const h = new URLSearchParams(location.hash.slice(1));
+if (h.get('view')) { if (h.get('theme')) document.documentElement.dataset.theme = h.get('theme'); if (h.get('w')) document.documentElement.style.setProperty('--w', h.get('w') + 'px'); run(Object.fromEntries(h)); }
+</script>
+</body>
+</html>

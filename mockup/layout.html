@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geografía – layout mockup</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2433;--mute:#6b7385;--line:#d9d5ca;--accent:#2b5fd9;
+--sea:#dbe9f4;--land:#ece4d0;--bord:#a9a290;--target:#f0a21a;--ok:#2e9e5b;--bad:#d64545}
+@media(prefers-color-scheme:dark){:root{--bg:#161a22;--card:#1f2430;--ink:#e8eaf0;--mute:#98a0b3;--line:#333b4d;--accent:#6c93ff;
+--sea:#1d2f40;--land:#3a3a33;--bord:#6a675b}}
+*{box-sizing:border-box}body{margin:0;font:16px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+header b{font-size:18px}.lang button{padding:4px 10px}.lang .on{background:var(--accent);color:#fff;border-color:var(--accent)}
+main{max-width:980px;margin:0 auto;padding:16px}
+button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer}
+button:hover{border-color:var(--accent)}button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+h2{margin:18px 0 8px;font-size:15px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.row{display:flex;flex-wrap:wrap;gap:8px}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+input{font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.quiz{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){.quiz{grid-template-columns:1fr}}
+.opt{display:block;width:100%;text-align:left;margin:6px 0}.opt.ok{background:var(--ok);color:#fff;border-color:var(--ok)}.opt.bad{background:var(--bad);color:#fff;border-color:var(--bad)}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}
+svg.map{width:100%;height:auto;background:var(--sea);border-radius:10px;border:1px solid var(--line)}
+svg.map path{fill:var(--land);stroke:var(--bord);stroke-width:1}svg.map .click{cursor:pointer}svg.map .click:hover{fill:var(--target)}
+svg.map .t{fill:var(--target)}svg.map .g{fill:var(--ok)}svg.map .r{fill:var(--bad)}
+.note{font-size:12px;color:var(--mute)}table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid var(--line);text-align:left}
+.hide{display:none}.big{font-size:42px;font-weight:700}
+</style>
+</head>
+<body>
+<header><b id="title"></b><div class="lang"><button data-l="es" class="on">ES</button> <button data-l="en">EN</button></div></header>
+<main>
+<section id="s-player"></section>
+<section id="s-menu" class="hide"></section>
+<section id="s-quiz" class="hide"></section>
+<section id="s-result" class="hide"></section>
+<section id="s-stats" class="hide"></section>
+<p class="note" id="note"></p>
+</main>
+<script>
+const T={es:{title:"Geografía",new:"Nuevo jugador",name:"Nombre",enter:"Entrar",existing:"Jugadores existentes",hi:"Hola",stats:"Mis estadísticas",
+spain:"España",world:"Mundo (países y capitales)",locate:"Situar en el mapa",n:"Nº de preguntas",prov:"Capitales de provincia",ccaa:"Comunidades autónomas",
+eu:"Europa",am:"América",as:"Asia",oc:"Oceanía",af:"África",lprov:"Provincias",lccaa:"Comunidades",lpais:"Países",start:"Empezar",q:"Pregunta",
+whatcap:"¿Cuál es la capital de Portugal?",where:"¿Dónde está Bolivia? Haz clic en el mapa",ok:"¡Correcto!",bad:"Incorrecto. Era Lisboa",next:"Siguiente",good:"aciertos",key:"(barra espaciadora)",
+clicked:"Has hecho clic aquí",res:"Resultado",again:"Repetir",menu:"Menú",back:"Volver",rank:"Ranking por tema",topic:"Tema",pct:"% aciertos",games:"Partidas",
+missed:"Más falladas",streak:"Racha actual",last:"Últimas partidas",note:"MAQUETA: los mapas son formas esquemáticas; los reales usarán datos oficiales."},
+en:{title:"Geography",new:"New player",name:"Name",enter:"Enter",existing:"Existing players",hi:"Hi",stats:"My stats",
+spain:"Spain",world:"World (countries and capitals)",locate:"Locate on the map",n:"Number of questions",prov:"Provincial capitals",ccaa:"Autonomous communities",
+eu:"Europe",am:"Americas",as:"Asia",oc:"Oceania",af:"Africa",lprov:"Provinces",lccaa:"Communities",lpais:"Countries",start:"Start",q:"Question",
+whatcap:"What is the capital of Portugal?",where:"Where is Bolivia? Click on the map",ok:"Correct!",bad:"Wrong. It was Lisbon",next:"Next",good:"correct",key:"(space bar)",
+clicked:"You clicked here",res:"Result",again:"Play again",menu:"Menu",back:"Back",rank:"Ranking by topic",topic:"Topic",pct:"% correct",games:"Games",
+missed:"Most missed",streak:"Current streak",last:"Last games",note:"MOCKUP: maps are schematic shapes; real ones will use official data."}};
+let right=2,done=3,L="es",screen="player",player="Ana",mode="mc",cnt=10,sel="prov",qi=4,ans=null,clickedId=null;
+const t=k=>T[L][k];
+const $=id=>document.getElementById(id);
+const map=(hl,wrong)=>`<svg class="map" viewBox="0 0 300 200">
+<path class="${hl=="a"?"g":""}" d="M20 30 L110 20 L130 70 L90 110 L30 90Z"/>
+<path class="${hl=="b"?"g":""}" d="M120 20 L210 30 L220 90 L150 100 L132 70Z"/>
+<path class="${hl=="c"?"g":""}" d="M95 112 L150 104 L190 150 L130 185 L85 150Z"/>
+<path class="${wrong=="d"?"r":""}" d="M225 40 L280 60 L270 130 L225 95Z"/>
+${hl?'<circle cx="75" cy="62" r="5" fill="var(--ink)"/><text x="84" y="60" font-size="11" fill="var(--ink)">Lisboa</text>':""}</svg>`;
+const locMap=()=>`<svg class="map" viewBox="0 0 300 200">
+${[["a","M20 30 L110 20 L130 70 L90 110 L30 90Z"],["b","M120 20 L210 30 L220 90 L150 100 L132 70Z"],["c","M95 112 L150 104 L190 150 L130 185 L85 150Z"],["d","M225 40 L280 60 L270 130 L225 95Z"]]
+.map(([i,d])=>`<path data-id="${i}" class="${ans==null?"click":""} ${ans!=null&&i=="c"?"g":""} ${ans!=null&&clickedId==i&&i!="c"?"r":""}" d="${d}"/>`).join("")}</svg>`;
+function render(){
+ $("title").textContent=t("title");$("note").textContent=t("note");
+ document.querySelectorAll(".lang button").forEach(b=>b.classList.toggle("on",b.dataset.l==L));
+ ["player","menu","quiz","result","stats"].forEach(s=>$("s-"+s).classList.toggle("hide",s!=screen));
+ $("s-player").innerHTML=`<div class="card"><h2>${t("new")}</h2><div class="row"><input placeholder="${t("name")}"><button data-go="menu">${t("enter")}</button></div>
+ <h2>${t("existing")}</h2><div class="row">${["Ana","Luis","Marta"].map(n=>`<button data-go="menu" data-p="${n}">${n}</button>`).join("")}</div></div>`;
+ const chip=(k,g)=>`<button class="${sel==k?"on":""}" data-sel="${k}" data-mode="${g}">${t(k)}</button>`;
+ $("s-menu").innerHTML=`<div class="row" style="justify-content:space-between;align-items:center"><b>${t("hi")}, ${player}</b><button data-go="stats">${t("stats")}</button></div>
+ <h2>${t("spain")}</h2><div class="row">${chip("prov","mc")}${chip("ccaa","mc")}</div>
+ <h2>${t("world")}</h2><div class="row">${["eu","am","as","oc","af"].map(k=>chip(k,"mc")).join("")}</div>
+ <h2>${t("locate")}</h2><div class="row">${chip("lprov","loc")}${chip("lccaa","loc")}${["eu","am","as","oc","af"].map(k=>`<button class="${sel=="l"+k?"on":""}" data-sel="l${k}" data-mode="loc">${t("lpais")}: ${t(k)}</button>`).join("")}</div>
+ <h2>${t("n")}</h2><div class="row">${[10,20,30].map(n=>`<button class="${cnt==n?"on":""}" data-n="${n}">${n}</button>`).join("")}</div>
+ <p><button class="on" data-go="quiz">${t("start")}</button></p>`;
+ const prog=`<div class="bar"><i style="width:${qi/cnt*100}%"></i></div><p class="note" style="display:flex;justify-content:space-between"><span>${t("q")} ${qi}/${cnt}</span><span>${done?Math.round(right/done*100):0} % ${t("good")}</span></p>`;
+ if(mode=="mc"){
+  const o=[["Madrid",0],["Lisboa",1],["Oporto",0],["Roma",0],["París",0]];
+  $("s-quiz").innerHTML=`${prog}<div class="quiz"><div class="card"><h3>${t("whatcap")}</h3>${o.map(([x,c],i)=>`<button class="opt ${ans!=null?(c?"ok":ans==i?"bad":""):""}" data-a="${i}" ${ans!=null?"disabled":""}>${x}</button>`).join("")}
+  ${ans!=null?`<p><b>${ans==1?t("ok"):t("bad")}</b></p><button class="on" data-go="${qi>=cnt?"result":"next"}">${t("next")} <small>${t("key")}</small></button>`:""}</div>
+  <div class="card">${ans!=null?map("a"):'<p class="note">· · ·</p>'}</div></div>`;
+ } else {
+  $("s-quiz").innerHTML=`${prog}<div class="card"><h3>${t("where")}</h3>${locMap()}
+  ${ans!=null?`<p><b>${ans==1?t("ok"):t("bad").replace("Lisboa","Bolivia").replace("Lisbon","Bolivia")}</b></p><button class="on" data-go="next">${t("next")} <small>${t("key")}</small></button>`:""}</div>`;
+ }
+ $("s-result").innerHTML=`<div class="card"><h2>${t("res")}</h2><div class="big">7/10 · 70 %</div><div class="row"><button class="on" data-go="quiz" data-reset="1">${t("again")}</button><button data-go="menu">${t("menu")}</button></div></div>`;
+ const rows=[["prov",82,5],["ccaa",91,3],["eu",76,4],["lprov",58,2]];
+ $("s-stats").innerHTML=`<div class="row" style="justify-content:space-between"><h2>${t("rank")}</h2><button data-go="menu">${t("back")}</button></div>
+ <div class="card"><table><tr><th>${t("topic")}</th><th>${t("pct")}</th><th>${t("games")}</th></tr>${rows.map(r=>`<tr><td>${t(r[0])}</td><td>${r[1]} %</td><td>${r[2]}</td></tr>`).join("")}</table>
+ <p><b>${t("streak")}:</b> 6 · <b>${t("missed")}:</b> Bolivia, Burkina Faso, Soria</p>
+ <svg viewBox="0 0 300 80" class="map" style="background:none"><polyline points="10,60 70,50 130,40 190,35 250,20" fill="none" stroke="var(--accent)" stroke-width="3"/></svg></div>`;
+}
+document.addEventListener("click",e=>{
+ const b=e.target.closest("[data-l],[data-go],[data-sel],[data-n],[data-a],path[data-id]");if(!b)return;
+ if(b.dataset.l)L=b.dataset.l;
+ if(b.dataset.p)player=b.dataset.p;
+ if(b.dataset.sel){sel=b.dataset.sel;mode=b.dataset.mode}
+ if(b.dataset.n)cnt=+b.dataset.n;
+ if(b.dataset.a!=null){ans=+b.dataset.a;done++;if(ans==1)right++}
+ if(b.dataset.id&&ans==null){clickedId=b.dataset.id;ans=b.dataset.id=="c"?1:0;done++;if(ans==1)right++}
+ if(b.dataset.go){const g=b.dataset.go;if(g=="next"){qi++;ans=null;clickedId=null}else{if(g=="quiz"){if(b.dataset.reset){qi=1;right=0;done=0}else qi=4;ans=null;clickedId=null}screen=g}}
+ render();
+});
+document.addEventListener("keydown",e=>{
+ if(e.code!=="Space"||screen!=="quiz")return;
+ const n=document.querySelector('#s-quiz button[data-go="next"],#s-quiz button[data-go="result"]');
+ if(!n)return;
+ e.preventDefault();if(document.activeElement)document.activeElement.blur();n.click();
+});
+render();
+</script>
+</body>
+</html>

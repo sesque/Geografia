@@ -1,0 +1,125 @@
+.geomap {
+  --gm-sea: #dbe9f4;
+  --gm-land: #ece4d0;
+  --gm-border: #a9a290;
+  --gm-hover: #f8dc9c;
+  --gm-target: #f0a21a;
+  --gm-correct: #2e9e5b;
+  --gm-wrong: #d64545;
+  --gm-city: #1d2433;
+  --gm-ink: #1d2433;
+  --gm-mute: #6b7385;
+  --gm-pin: #7d7664;
+  --gm-halo: rgba(255, 255, 255, .88);
+  --gm-ui-bg: #ffffff;
+  --gm-ui-line: #d9d5ca;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--gm-sea);
+  border-radius: 10px;
+  border: 1px solid var(--gm-ui-line);
+  line-height: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .geomap {
+    --gm-sea: #1d2f40;
+    --gm-land: #3a3a33;
+    --gm-border: #6a675b;
+    --gm-hover: #7a6430;
+    --gm-city: #f1f2f6;
+    --gm-ink: #e8eaf0;
+    --gm-mute: #98a0b3;
+    --gm-pin: #a9a595;
+    --gm-halo: rgba(20, 26, 36, .85);
+    --gm-ui-bg: #1f2430;
+    --gm-ui-line: #333b4d;
+  }
+}
+:root[data-theme="dark"] .geomap {
+  --gm-sea: #1d2f40;
+  --gm-land: #3a3a33;
+  --gm-border: #6a675b;
+  --gm-hover: #7a6430;
+  --gm-city: #f1f2f6;
+  --gm-ink: #e8eaf0;
+  --gm-mute: #98a0b3;
+  --gm-pin: #a9a595;
+  --gm-halo: rgba(20, 26, 36, .85);
+  --gm-ui-bg: #1f2430;
+  --gm-ui-line: #333b4d;
+}
+
+.geomap svg { display: block; width: 100%; background: var(--gm-sea); touch-action: pan-y; }
+.geomap.gm-interactive svg { touch-action: none; cursor: grab; }
+.geomap.gm-interactive svg:active { cursor: grabbing; }
+.geomap .gm-sea { fill: var(--gm-sea); }
+
+.geomap .gm-area {
+  fill: var(--gm-land);
+  stroke: var(--gm-border);
+  stroke-width: .7;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.geomap .gm-area.gm-click { pointer-events: all; cursor: pointer; }
+.geomap .gm-area.gm-click:hover,
+.geomap .gm-area.gm-hover { fill: var(--gm-hover); }
+.geomap .gm-area.gm-target { fill: var(--gm-target); stroke: var(--gm-ink); stroke-width: 1.4; }
+.geomap .gm-area.gm-correct { fill: var(--gm-correct); stroke: var(--gm-ink); stroke-width: 1.4; }
+.geomap .gm-area.gm-wrong { fill: var(--gm-wrong); stroke: var(--gm-ink); stroke-width: 1.4; }
+.geomap .gm-area.gm-done { cursor: default; }
+
+.geomap .gm-disp-erase { fill: none; stroke: var(--gm-land); stroke-width: 1.8; vector-effect: non-scaling-stroke; pointer-events: none; }
+.geomap .gm-disp {
+  fill: none;
+  stroke: var(--gm-border);
+  stroke-width: 1;
+  stroke-dasharray: 1.5 2.5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.geomap .gm-inset-frame { fill: var(--gm-sea); stroke: var(--gm-border); stroke-width: 1; }
+.geomap .gm-inset-title { fill: var(--gm-mute); font: 600 10px/1 system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+.geomap .gm-hit { fill: transparent; stroke: none; pointer-events: all; cursor: pointer; }
+.geomap .gm-pin.gm-done .gm-hit { cursor: default; }
+.geomap .gm-pin-dot { fill: var(--gm-pin); stroke: var(--gm-halo); stroke-width: 1.2; pointer-events: none; }
+.geomap .gm-pin.gm-hover .gm-pin-dot { fill: var(--gm-target); stroke: var(--gm-ink); }
+.geomap .gm-pin.gm-target .gm-pin-dot { fill: var(--gm-target); stroke: var(--gm-ink); }
+.geomap .gm-pin.gm-correct .gm-pin-dot { fill: var(--gm-correct); stroke: var(--gm-ink); }
+.geomap .gm-pin.gm-wrong .gm-pin-dot { fill: var(--gm-wrong); stroke: var(--gm-ink); }
+.geomap .gm-ring { fill: none; stroke: var(--gm-target); stroke-width: 2.5; pointer-events: none; }
+.geomap .gm-pin:not(.gm-target):not(.gm-correct):not(.gm-wrong) .gm-ring { display: none; }
+.geomap .gm-picked .gm-area, .geomap.gm-picked .gm-area, .geomap.gm-picked .gm-hit { pointer-events: none; }
+.geomap .gm-ring.gm-correct { stroke: var(--gm-correct); }
+.geomap .gm-ring.gm-wrong { stroke: var(--gm-wrong); }
+
+.geomap .gm-city-dot { fill: var(--gm-city); stroke: var(--gm-halo); stroke-width: 1.6; pointer-events: none; }
+.geomap .gm-city-label {
+  fill: var(--gm-ink);
+  font: 600 12px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  paint-order: stroke;
+  stroke: var(--gm-halo);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.geomap .gm-zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; line-height: 1; }
+.geomap .gm-zoom button {
+  width: 34px; height: 34px; padding: 0;
+  font: 600 20px/1 system-ui, sans-serif;
+  color: var(--gm-ink);
+  background: var(--gm-ui-bg);
+  border: 1px solid var(--gm-ui-line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.geomap .gm-zoom button:hover { border-color: var(--gm-target); }
+.geomap .gm-zoom button:focus-visible { outline: 2px solid var(--gm-target); outline-offset: 1px; }

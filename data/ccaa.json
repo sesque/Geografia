@@ -1,0 +1,173 @@
+[
+  {
+    "id": "andalucia",
+    "name_es": "Andalucía",
+    "name_en": "Andalusia",
+    "type": "comunidad",
+    "capital_es": "Sevilla",
+    "capital_en": "Seville",
+    "province_ids": ["04", "11", "14", "18", "21", "23", "29", "41"]
+  },
+  {
+    "id": "aragon",
+    "name_es": "Aragón",
+    "name_en": "Aragon",
+    "type": "comunidad",
+    "capital_es": "Zaragoza",
+    "capital_en": "Zaragoza",
+    "province_ids": ["22", "44", "50"]
+  },
+  {
+    "id": "asturias",
+    "name_es": "Asturias",
+    "name_en": "Asturias",
+    "type": "comunidad",
+    "capital_es": "Oviedo",
+    "capital_en": "Oviedo",
+    "province_ids": ["33"]
+  },
+  {
+    "id": "canarias",
+    "name_es": "Canarias",
+    "name_en": "Canary Islands",
+    "type": "comunidad",
+    "capital_es": "Las Palmas de Gran Canaria / Santa Cruz de Tenerife",
+    "capital_en": "Las Palmas de Gran Canaria / Santa Cruz de Tenerife",
+    "province_ids": ["35", "38"]
+  },
+  {
+    "id": "cantabria",
+    "name_es": "Cantabria",
+    "name_en": "Cantabria",
+    "type": "comunidad",
+    "capital_es": "Santander",
+    "capital_en": "Santander",
+    "province_ids": ["39"]
+  },
+  {
+    "id": "castilla_y_leon",
+    "name_es": "Castilla y León",
+    "name_en": "Castile and León",
+    "type": "comunidad",
+    "capital_es": "Valladolid",
+    "capital_en": "Valladolid",
+    "province_ids": ["05", "09", "24", "34", "37", "40", "42", "47", "49"]
+  },
+  {
+    "id": "castilla_la_mancha",
+    "name_es": "Castilla-La Mancha",
+    "name_en": "Castile-La Mancha",
+    "type": "comunidad",
+    "capital_es": "Toledo",
+    "capital_en": "Toledo",
+    "province_ids": ["02", "13", "16", "19", "45"]
+  },
+  {
+    "id": "cataluna",
+    "name_es": "Cataluña",
+    "name_en": "Catalonia",
+    "type": "comunidad",
+    "capital_es": "Barcelona",
+    "capital_en": "Barcelona",
+    "province_ids": ["08", "17", "25", "43"]
+  },
+  {
+    "id": "comunidad_de_madrid",
+    "name_es": "Comunidad de Madrid",
+    "name_en": "Community of Madrid",
+    "type": "comunidad",
+    "capital_es": "Madrid",
+    "capital_en": "Madrid",
+    "province_ids": ["28"]
+  },
+  {
+    "id": "comunidad_foral_de_navarra",
+    "name_es": "Comunidad Foral de Navarra",
+    "name_en": "Navarre",
+    "type": "comunidad",
+    "capital_es": "Pamplona",
+    "capital_en": "Pamplona",
+    "province_ids": ["31"]
+  },
+  {
+    "id": "comunidad_valenciana",
+    "name_es": "Comunidad Valenciana",
+    "name_en": "Valencian Community",
+    "type": "comunidad",
+    "capital_es": "Valencia",
+    "capital_en": "Valencia",
+    "province_ids": ["03", "12", "46"]
+  },
+  {
+    "id": "extremadura",
+    "name_es": "Extremadura",
+    "name_en": "Extremadura",
+    "type": "comunidad",
+    "capital_es": "Mérida",
+    "capital_en": "Mérida",
+    "province_ids": ["06", "10"]
+  },
+  {
+    "id": "galicia",
+    "name_es": "Galicia",
+    "name_en": "Galicia",
+    "type": "comunidad",
+    "capital_es": "Santiago de Compostela",
+    "capital_en": "Santiago de Compostela",
+    "province_ids": ["15", "27", "32", "36"]
+  },
+  {
+    "id": "islas_baleares",
+    "name_es": "Islas Baleares",
+    "name_en": "Balearic Islands",
+    "type": "comunidad",
+    "capital_es": "Palma",
+    "capital_en": "Palma",
+    "province_ids": ["07"]
+  },
+  {
+    "id": "la_rioja",
+    "name_es": "La Rioja",
+    "name_en": "La Rioja",
+    "type": "comunidad",
+    "capital_es": "Logroño",
+    "capital_en": "Logroño",
+    "province_ids": ["26"]
+  },
+  {
+    "id": "pais_vasco",
+    "name_es": "País Vasco",
+    "name_en": "Basque Country",
+    "type": "comunidad",
+    "capital_es": "Vitoria-Gasteiz",
+    "capital_en": "Vitoria-Gasteiz",
+    "province_ids": ["01", "20", "48"]
+  },
+  {
+    "id": "region_de_murcia",
+    "name_es": "Región de Murcia",
+    "name_en": "Region of Murcia",
+    "type": "comunidad",
+    "capital_es": "Murcia",
+    "capital_en": "Murcia",
+    "province_ids": ["30"]
+  },
+  {
+    "id": "ceuta",
+    "name_es": "Ceuta",
+    "name_en": "Ceuta",
+    "type": "ciudad_autonoma",
+    "capital_es": "Ceuta",
+    "capital_en": "Ceuta",
+    "province_ids": []
+  },
+  {
+    "id": "melilla",
+    "name_es": "Melilla",
+    "name_en": "Melilla",
+    "type": "ciudad_autonoma",
+    "capital_es": "Melilla",
+    "capital_en": "Melilla",
+    "province_ids": []
+  }
+]
