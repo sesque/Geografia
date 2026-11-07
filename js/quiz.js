@@ -1,7 +1,7 @@
 (function (root) {
   const TOPICS = [
-    { id: 'es_prov', group: 'spain', labelKey: 'topic.es_prov' },
-    { id: 'es_ccaa', group: 'spain', labelKey: 'topic.es_ccaa' },
+    { id: 'es_ccaa_cap', group: 'spain', labelKey: 'topic.es_ccaa_cap' },
+    { id: 'es_ccaa_prov', group: 'spain', labelKey: 'topic.es_ccaa_prov' },
     { id: 'world_europa', group: 'world', labelKey: 'topic.world_europa' },
     { id: 'world_america', group: 'world', labelKey: 'topic.world_america' },
     { id: 'world_asia', group: 'world', labelKey: 'topic.world_asia' },
@@ -127,16 +127,12 @@
     return { es: '¿Cuál es la capital de ' + name.es + '?', en: 'What is the capital of ' + name.en + '?' };
   }
 
-  function promptProvinceOfCapital(capital) {
-    return { es: '¿De qué provincia es capital ' + capital.es + '?', en: 'Which province is ' + capital.en + ' the capital of?' };
-  }
-
   function promptCcaaOfCapital(capital) {
     return { es: '¿De qué comunidad autónoma es capital ' + capital.es + '?', en: 'Which autonomous community is ' + capital.en + ' the capital of?' };
   }
 
   function promptCcaaOfProvince(name) {
-    return { es: '¿En qué comunidad autónoma está ' + name.es + '?', en: 'Which autonomous community is ' + name.en + ' in?' };
+    return { es: '¿A qué comunidad autónoma pertenece la provincia ' + name.es + '?', en: 'Which autonomous community is the province of ' + name.en + ' in?' };
   }
 
   function promptCountryOfCapital(capital) {
@@ -147,94 +143,66 @@
     return { es: '¿Dónde está ' + name.es + '?', en: 'Where is ' + name.en + '?' };
   }
 
-  function esProvQuestions(topicId, count, rng) {
-    const items = provItems();
+  // Capitals with no province-capital entry in provincias.json (Mérida, Santiago de Compostela).
+  const CCAA_CAPITAL_COORDS = {
+    Mérida: { lat: 38.9161, lon: -6.3437 },
+    'Santiago de Compostela': { lat: 42.8782, lon: -8.5448 }
+  };
+
+  function ccaaCity(c) {
+    const first = String(c.capital_es || '').split('/')[0].trim();
+    const p = provData().find(x => norm(x.capital_es) === norm(first) || norm(x.name_es) === norm(first));
+    if (p) return { lat: p.capital_lat, lon: p.capital_lon, name: label(c.capital_es, c.capital_en) };
+    const coords = CCAA_CAPITAL_COORDS[first];
+    if (!coords) return null;
+    return { lat: coords.lat, lon: coords.lon, name: label(c.capital_es, c.capital_en) };
+  }
+
+  function comunidades() {
+    return ccaaItems().filter(c => (c.raw.province_ids || []).length > 0);
+  }
+
+  function esCcaaCapQuestions(topicId, count, rng) {
+    const items = comunidades();
     const picked = shuffle(items, rng).slice(0, Math.min(count, items.length));
     const start = rng() < 0.5 ? 0 : 1;
     return picked.map((item, i) => {
       const toCapital = (i + start) % 2 === 0;
-      const same = shuffle(items.filter(x => x.key !== item.key && x.ccaaId === item.ccaaId), rng);
-      const rest = shuffle(items.filter(x => x.key !== item.key && x.ccaaId !== item.ccaaId), rng);
+      const pool = shuffle(items.filter(x => x.key !== item.key), rng);
       const labelOf = toCapital ? (x => x.capital) : (x => x.name);
       return {
         topic: topicId,
         kind: 'mc',
         itemKey: item.key,
-        prompt: toCapital ? promptCapitalOf(item.name) : promptProvinceOfCapital(item.capital),
-        options: buildOptions(item, same.concat(rest), labelOf, rng),
+        prompt: toCapital ? promptCapitalOf(item.name) : promptCcaaOfCapital(item.capital),
+        options: buildOptions(item, pool, labelOf, rng),
         answerId: item.key,
-        target: { layer: 'provincias', id: item.id, city: { lat: item.lat, lon: item.lon, name: item.capital } },
+        target: { layer: 'ccaa', id: item.id, city: ccaaCity(item.raw) },
         mapView: 'spain'
       };
     });
   }
 
-  function ccaaCity(c) {
-    const first = String(c.capital_es || '').split('/')[0].trim();
-    const p = provData().find(x => norm(x.capital_es) === norm(first) || norm(x.name_es) === norm(first));
-    if (!p) return null;
-    return { lat: p.capital_lat, lon: p.capital_lon, name: label(c.capital_es, c.capital_en) };
-  }
-
-  function esCcaaQuestions(topicId, count, rng) {
-    const ccaas = ccaaItems();
-    const comunidades = ccaas.filter(c => (c.raw.province_ids || []).length > 0);
-    const provs = provItems();
-    const ccaaMap = new Map(ccaas.map(c => [c.id, c]));
-    const ccaaPool = shuffle(ccaas, rng);
-    const provPool = shuffle(provs, rng);
-    const kinds = ['cap', 'ofcap', 'inprov'];
-    const rot = Math.floor(rng() * 3) % 3;
-    const out = [];
-    let ci = 0;
-    let pi = 0;
-    for (let i = 0; i < count; i++) {
-      let kind = kinds[(i + rot) % 3];
-      let item = null;
-      if ((kind === 'cap' || kind === 'ofcap') && ci < ccaaPool.length) {
-        item = ccaaPool[ci++];
-      } else if (kind === 'inprov' && pi < provPool.length) {
-        item = provPool[pi++];
-      } else if (ci < ccaaPool.length) {
-        item = ccaaPool[ci++];
-        kind = rng() < 0.5 ? 'cap' : 'ofcap';
-      } else if (pi < provPool.length) {
-        item = provPool[pi++];
-        kind = 'inprov';
-      } else {
-        break;
-      }
-      if (kind === 'inprov') {
-        const answer = ccaaMap.get(item.ccaaId);
-        if (!answer) continue;
-        const pool = shuffle(comunidades.filter(x => x.key !== answer.key), rng);
-        out.push({
-          topic: topicId,
-          kind: 'mc',
-          itemKey: item.key,
-          prompt: promptCcaaOfProvince(item.name),
-          options: buildOptions(answer, pool, x => x.name, rng),
-          answerId: answer.key,
-          target: { layer: 'ccaa', id: answer.id, city: null },
-          mapView: 'spain'
-        });
-      } else {
-        const toCapital = kind === 'cap';
-        const pool = shuffle(comunidades.filter(x => x.key !== item.key), rng);
-        const labelOf = toCapital ? (x => x.capital) : (x => x.name);
-        out.push({
-          topic: topicId,
-          kind: 'mc',
-          itemKey: item.key,
-          prompt: toCapital ? promptCapitalOf(item.name) : promptCcaaOfCapital(item.capital),
-          options: buildOptions(item, pool, labelOf, rng),
-          answerId: item.key,
-          target: { layer: 'ccaa', id: item.id, city: ccaaCity(item.raw) },
-          mapView: 'spain'
-        });
-      }
-    }
-    return out;
+  function esCcaaProvQuestions(topicId, count, rng) {
+    const items = provItems();
+    const ccaas = comunidades();
+    const ccaaMap = new Map(ccaaItems().map(c => [c.id, c]));
+    const picked = shuffle(items, rng).slice(0, Math.min(count, items.length));
+    return picked.map(item => {
+      const answer = ccaaMap.get(item.ccaaId);
+      if (!answer) throw new Error('quiz: province without comunidad ' + item.key);
+      const pool = shuffle(ccaas.filter(x => x.key !== answer.key), rng);
+      return {
+        topic: topicId,
+        kind: 'mc',
+        itemKey: item.key,
+        prompt: promptCcaaOfProvince(item.name),
+        options: buildOptions(answer, pool, x => x.name, rng),
+        answerId: answer.key,
+        target: { layer: 'ccaa', id: answer.id, city: { lat: item.lat, lon: item.lon, name: item.capital } },
+        mapView: 'spain'
+      };
+    });
   }
 
   function worldQuestions(topicId, continent, count, rng) {
@@ -277,8 +245,8 @@
     const random = typeof rng === 'function' ? rng : Math.random;
     const n = Math.floor(Number(count));
     if (!Number.isFinite(n) || n <= 0) return [];
-    if (topicId === 'es_prov') return esProvQuestions(topicId, n, random);
-    if (topicId === 'es_ccaa') return esCcaaQuestions(topicId, n, random);
+    if (topicId === 'es_ccaa_cap') return esCcaaCapQuestions(topicId, n, random);
+    if (topicId === 'es_ccaa_prov') return esCcaaProvQuestions(topicId, n, random);
     if (topicId === 'loc_prov') return locateQuestions(topicId, provItems(), 'provincias', 'spain', n, random);
     if (topicId === 'loc_ccaa') return locateQuestions(topicId, ccaaItems(), 'ccaa', 'spain', n, random);
     const m = /^(world|loc)_(europa|america|asia|oceania|africa)$/.exec(topicId);

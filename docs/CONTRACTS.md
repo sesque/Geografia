@@ -21,7 +21,7 @@ Code style: 2-space indent, `const`/`let`, no frameworks, no comments except for
 
 ## Topics (`Quiz.TOPICS`)
 `[{ id, group: 'spain'|'world'|'locate', labelKey }]` with ids:
-`es_prov` (capitales de provincia), `es_ccaa`, `world_europa`, `world_america`, `world_asia`, `world_oceania`, `world_africa`,
+`es_ccaa_cap` (capitales de comunidades autónomas), `es_ccaa_prov` (a qué comunidad autónoma pertenece una provincia), `world_europa`, `world_america`, `world_asia`, `world_oceania`, `world_africa`,
 `loc_prov`, `loc_ccaa`, `loc_europa`, `loc_america`, `loc_asia`, `loc_oceania`, `loc_africa`.
 `labelKey` is a key in `i18n.js`.
 
@@ -38,8 +38,8 @@ Code style: 2-space indent, `const`/`let`, no frameworks, no comments except for
   mapView: 'spain' | 'europa' | 'america' | 'asia' | 'oceania' | 'africa'
 }
 ```
-- `es_prov`: ask both directions mixed 50/50: "¿Cuál es la capital de X?" (province → capital) and "¿De qué provincia es capital Y?" (capital → province). All 50 provinces are used even when province name == capital name. Distractors: prefer same comunidad, then other provinces. `target` = the province (city = capital).
-- `es_ccaa`: mix of three kinds: capital of comunidad X; of which comunidad is Y capital; in which comunidad is province Z. `target` = the comunidad (city = capital where relevant). Ceuta/Melilla only in the capital-of kinds. Distractors from the other comunidades.
+- `es_ccaa_cap`: the 17 comunidades autónomas (Ceuta and Melilla are excluded: they are ciudades autónomas). Both directions mixed 50/50: "¿Cuál es la capital de X?" (comunidad → capital) and "¿De qué comunidad autónoma es capital Y?" (capital → comunidad). Distractors come from the other comunidades' capitals/names. `target` = the comunidad (layer ccaa), city = its capital (for Canarias the label is 'Las Palmas de Gran Canaria / Santa Cruz de Tenerife'; place the dot at Las Palmas de Gran Canaria's coordinates from provincias.json, id 35).
+- `es_ccaa_prov`: all 50 provinces, one kind: "¿A qué comunidad autónoma pertenece la provincia X?" / "Which autonomous community is the province of X in?". Options = 5 comunidades (the correct one plus 4 others, no Ceuta/Melilla; prefer geographic neighbours when easy, else random). `answerId` = ccaa id, `target` = the comunidad (layer ccaa), city = the province's capital (lat/lon from provincias.json) so the map shows both the comunidad and where the province capital is. Plays at most 50.
 - `world_<continent>`: country → capital and capital → country, 50/50. Distractors prefer the same continent. Exclude `disputed` countries as the *asked* item, but they may not appear as options either. `target.layer='world'`, `id` = iso_n3, city = capital, `mapView` = continent.
 - `loc_*`: `kind:'locate'`, no options; `answerId` = target id; prompt "¿Dónde está X?"/"Where is X?". `loc_prov` → layer provincias, `loc_ccaa` → ccaa, `loc_<continent>` → world countries of that continent, excluding `disputed`. Locate questions have `city: null`.
 - Item `itemKey` for a country is `pais:<iso_n3>`, province `prov:<id>`, comunidad `ccaa:<id>`.
@@ -89,7 +89,7 @@ m.destroy()
 ## app.js (UI)
 Implements exactly the screens, flow and styles of the approved `mockup/layout.html` (player → menu → quiz → result → stats) and the 5-second skippable splash of `mockup/splash.html`, wired to the modules above:
 - splash (5 s, click/Space skips) → player screen. ES/EN toggle in the header on every screen; the choice is stored with `Store.setSetting('lang')`.
-- Menu groups: España (`es_prov`, `es_ccaa`), Mundo (5 continents), Situar en el mapa (`loc_*`), count 10/20/30. If a topic has fewer items than the count chosen, play all of them.
+- Menu groups: España (`es_ccaa_cap`, `es_ccaa_prov`), Mundo (5 continents), Situar en el mapa (`loc_*`), count 10/20/30. If a topic has fewer items than the count chosen, play all of them.
 - mc screen: question, 5 buttons, after answering colour right/wrong, show `GeoMap.show(...)` map on the right (below on phones), feedback text and a "Siguiente" button; **Space triggers Next**; keys 1-5 pick an option. Under the progress bar: "Pregunta n/N" left, "xx % aciertos" (running % correct) right.
 - locate screen: `GeoMap.locate` fills the card; after the click `GeoMap.reveal`, feedback text, Next (Space).
 - result screen: n/N and %, buttons Repetir / Menú; the game is saved through `Store.recordGame` when the last answer is given.
@@ -127,3 +127,7 @@ Apps Script protocol (`apps-script/Code.gs`): `doPost(e)` parses `e.postData.con
 - Stats screen: fetch `Sync.fetchAll()`, show "loading…", then rankings from `Stats.merge(Store.allGames(), central)`; per-topic ranking (existing) plus a new **overall ranking**; highlight the current player's row; medals/numbers for the top 3; a small status line ("Synced with the family scoreboard" / "Offline: showing this device only" / "n games waiting to sync"); when `Sync.enabled()` is false, show only local data without any status line.
 - The player screen's existing-player list stays local, but when central data loads, also offer players found centrally (so a family member on a new device can pick their name).
 - New i18n strings in ES and EN.
+
+## v3 changes
+- Topics `es_prov` and `es_ccaa` are removed (replaced by `es_ccaa_cap` and `es_ccaa_prov` above). Games already stored under old topic ids must be ignored by the stats screens/rankings (only topics in `Quiz.TOPICS` are listed), never crash.
+- GeoMap: zoom and pan (mouse wheel / pinch, drag, +/− buttons) work in EVERY map, including `show()` result maps and after `reveal()`; double-click/double-tap zoom in; dragging never triggers a pick; touch devices pan with one finger (`touch-action` must allow it inside the map without scrolling the page when the map is zoomed).

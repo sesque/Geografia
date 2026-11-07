@@ -70,10 +70,12 @@
     let lastW = 0;
     let ro = null;
     let destroyed = false;
+    let pickTimer = null;
 
     const btn = (txt, label, fn) => zoomBox.append('button').attr('type', 'button').attr('aria-label', label).text(txt).on('click', fn);
     btn('+', 'Zoom in', () => zoomStep(1.6));
     btn('−', 'Zoom out', () => zoomStep(1 / 1.6));
+    btn('\u2302', 'Reset view', () => { if (zoomB) svg.transition().duration(reducedMotion() ? 0 : 300).call(zoomB.transform, d3.zoomIdentity); });
 
     function zoomStep(f) {
       if (!zoomB) return;
@@ -217,7 +219,7 @@
       svg.append('rect').attr('class', 'gm-sea').attr('width', W).attr('height', H);
       const interactive = state.mode === 'locate';
       wrap.classed('gm-interactive', interactive).classed('gm-picked', state.picked);
-      zoomBox.style('display', interactive ? 'flex' : 'none');
+      zoomBox.style('display', 'flex');
 
       const gW = svg.append('g').attr('class', 'gm-world');
       gW.append('g').attr('class', 'gm-ctx').selectAll('path').data(sc.ctx).join('path')
@@ -288,21 +290,30 @@
         }
       }
 
-      svg.on('.zoom', null).on('click', null);
-      zoomB = null;
+      svg.on('.zoom', null).on('click', null).on('dblclick', null);
+      clearTimeout(pickTimer);
+      zoomB = d3.zoom().scaleExtent([1, 40]).clickDistance(4).extent([[0, 0], [W, H]]).translateExtent([[0, 0], [W, H]])
+        .filter(ev => !(ev.target.closest && ev.target.closest('.gm-inset')) && (!ev.ctrlKey || ev.type === 'wheel') && !ev.button)
+        .on('start', ev => { if (ev.sourceEvent && ev.sourceEvent.type !== 'wheel') wrap.classed('gm-dragging', true); })
+        .on('end', () => wrap.classed('gm-dragging', false))
+        .on('zoom', ev => applyT(ev.transform));
+      svg.call(zoomB);
+      svg.call(zoomB.transform, d3.zoomIdentity);
       if (interactive) {
-        zoomB = d3.zoom().scaleExtent([1, 40]).extent([[0, 0], [W, H]]).translateExtent([[0, 0], [W, H]])
-          .on('zoom', ev => applyT(ev.transform));
-        svg.call(zoomB).on('dblclick.zoom', null);
         svg.on('click', ev => {
+          if (ev.detail > 1) { clearTimeout(pickTimer); return; }
           const el = ev.target.closest && ev.target.closest('[data-id]');
           if (!el || state.picked || !state.onPick) return;
           const id = el.getAttribute('data-id');
           if (!sc.clickable.has(id)) return;
-          state.picked = true;
-          state.clickedId = id;
-          wrap.classed('gm-picked', true);
-          state.onPick(id);
+          clearTimeout(pickTimer);
+          pickTimer = setTimeout(() => {
+            if (state.picked || destroyed || scene !== sc) return;
+            state.picked = true;
+            state.clickedId = id;
+            wrap.classed('gm-picked', true);
+            state.onPick(id);
+          }, 260);
         });
       }
       applyT(curT = d3.zoomIdentity);
@@ -314,6 +325,7 @@
       const sc = scene;
       if (!sc) return;
       svg.select('.gm-world').attr('transform', t.toString());
+      wrap.classed('gm-zoomed', t.k > 1.001);
       sc.markers.forEach(m => {
         const x = m.fixed ? m.x : t.applyX(m.x), y = m.fixed ? m.y : t.applyY(m.y);
         m.g.attr('transform', `translate(${x},${y})`);
@@ -415,6 +427,7 @@
       },
       destroy() {
         destroyed = true;
+        clearTimeout(pickTimer);
         if (ro) ro.disconnect();
         wrap.remove();
       },

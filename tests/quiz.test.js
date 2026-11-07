@@ -34,13 +34,16 @@ const paisById = new Map(GeoData.paises.map((p) => [String(p.iso_n3), p]));
 
 const provInMap = GeoData.provincias.filter((p) => provIds.has(String(p.id)));
 const ccaaInMap = GeoData.ccaa.filter((c) => ccaaIds.has(c.id));
+const comunidadesInMap = ccaaInMap.filter((c) => c.type === 'comunidad');
 const countriesIn = (continent) => GeoData.paises.filter(
   (p) => p.continent === continent && !isDisputed(p) && worldIds.has(String(p.iso_n3))
 );
 
+const CIUDADES_AUTONOMAS = new Set(['ceuta', 'melilla']);
+
 function itemCount(topic) {
-  if (topic === 'es_prov') return provInMap.length;
-  if (topic === 'es_ccaa') return provInMap.length + ccaaInMap.length;
+  if (topic === 'es_ccaa_cap') return comunidadesInMap.length;
+  if (topic === 'es_ccaa_prov') return provInMap.length;
   if (topic === 'loc_prov') return provInMap.length;
   if (topic === 'loc_ccaa') return ccaaInMap.length;
   const m = /^(?:world|loc)_(europa|america|asia|oceania|africa)$/.exec(topic);
@@ -64,8 +67,7 @@ function expectedAnswer(q) {
   if (kind === 'prov') {
     const p = provById.get(id);
     if (es.startsWith('¿Cuál es la capital de ')) return { es: p.capital_es, en: p.capital_en };
-    if (es.startsWith('¿De qué provincia es capital ')) return { es: p.name_es, en: p.name_en };
-    if (es.startsWith('¿En qué comunidad autónoma está ')) {
+    if (es.startsWith('¿A qué comunidad autónoma pertenece la provincia ')) {
       const c = ccaaById.get(p.ccaa_id);
       return { es: c.name_es, en: c.name_en };
     }
@@ -125,11 +127,16 @@ function checkQuestion(q, topic) {
   assert.equal(answer.label.es, exp.es);
   assert.equal(answer.label.en, exp.en);
 
-  const prefix = topic === 'es_prov' ? 'prov:' : topic === 'es_ccaa' ? 'ccaa:' : 'pais:';
+  const prefix = topic === 'es_ccaa_cap' || topic === 'es_ccaa_prov' ? 'ccaa:' : 'pais:';
   for (const o of q.options) {
     assert.ok(o.id.startsWith(prefix), 'unexpected option kind ' + o.id);
     if (o.id.startsWith('pais:')) {
       assert.ok(!isDisputed(paisById.get(o.id.slice(5))), 'disputed country offered: ' + o.id);
+    }
+    if (topic === 'es_ccaa_cap' || topic === 'es_ccaa_prov') {
+      const ccaaId = o.id.slice(5);
+      assert.ok(!CIUDADES_AUTONOMAS.has(ccaaId), 'Ceuta/Melilla offered: ' + o.id);
+      assert.equal(ccaaById.get(ccaaId).type, 'comunidad', 'option is not a comunidad: ' + o.id);
     }
   }
 
@@ -153,12 +160,12 @@ function checkQuestion(q, topic) {
 
 test('TOPICS match the contract', () => {
   assert.deepEqual(Quiz.TOPICS.map((t) => t.id), [
-    'es_prov', 'es_ccaa', 'world_europa', 'world_america', 'world_asia', 'world_oceania', 'world_africa',
+    'es_ccaa_cap', 'es_ccaa_prov', 'world_europa', 'world_america', 'world_asia', 'world_oceania', 'world_africa',
     'loc_prov', 'loc_ccaa', 'loc_europa', 'loc_america', 'loc_asia', 'loc_oceania', 'loc_africa'
   ]);
   for (const t of Quiz.TOPICS) {
     assert.ok(['spain', 'world', 'locate'].includes(t.group));
-    assert.equal(typeof t.labelKey, 'string');
+    assert.equal(t.labelKey, 'topic.' + t.id);
   }
 });
 
@@ -197,31 +204,60 @@ for (const topic of Quiz.TOPICS) {
   }
 }
 
-test('es_prov asks both directions', () => {
+test('es_ccaa_cap asks both directions', () => {
   let toCapital = 0;
-  let toProvince = 0;
+  let toCcaa = 0;
+  const seen = new Set();
   for (let seed = 1; seed <= 40; seed++) {
-    for (const q of Quiz.generate('es_prov', 10, mulberry32(seed))) {
+    const qs = Quiz.generate('es_ccaa_cap', 17, mulberry32(seed));
+    assert.equal(qs.length, 17);
+    for (const q of qs) {
+      assert.equal(q.kind, 'mc');
+      const [kind, id] = q.itemKey.split(':');
+      assert.equal(kind, 'ccaa');
+      assert.ok(!CIUDADES_AUTONOMAS.has(id), 'Ceuta/Melilla asked: ' + q.itemKey);
+      assert.equal(ccaaById.get(id).type, 'comunidad');
+      assert.ok(q.target.city, 'missing capital dot for ' + q.itemKey);
+      assert.equal(q.target.city.name.es, ccaaById.get(id).capital_es);
+      seen.add(q.itemKey);
       if (q.prompt.es.startsWith('¿Cuál es la capital de ')) toCapital++;
-      else if (q.prompt.es.startsWith('¿De qué provincia es capital ')) toProvince++;
+      else if (q.prompt.es.startsWith('¿De qué comunidad autónoma es capital ')) toCcaa++;
       else assert.fail('unexpected prompt ' + q.prompt.es);
     }
   }
-  assert.ok(toCapital > 0 && toProvince > 0);
-  assert.equal(toCapital + toProvince, 400);
+  assert.ok(toCapital > 0 && toCcaa > 0);
+  assert.equal(toCapital + toCcaa, 40 * 17);
+  assert.equal(seen.size, comunidadesInMap.length, 'not every comunidad is asked over the seeds');
 });
 
-test('es_ccaa mixes the three kinds', () => {
+test('es_ccaa_prov asks every province about its own comunidad', () => {
   const seen = new Set();
-  for (let seed = 1; seed <= 20; seed++) {
-    for (const q of Quiz.generate('es_ccaa', 30, mulberry32(seed))) {
-      if (q.prompt.es.startsWith('¿Cuál es la capital de ')) seen.add('capital');
-      else if (q.prompt.es.startsWith('¿De qué comunidad autónoma es capital ')) seen.add('ofcapital');
-      else if (q.prompt.es.startsWith('¿En qué comunidad autónoma está ')) seen.add('inprovince');
-      else assert.fail('unexpected prompt ' + q.prompt.es);
+  for (let seed = 1; seed <= 40; seed++) {
+    const qs = Quiz.generate('es_ccaa_prov', 50, mulberry32(seed));
+    assert.equal(qs.length, 50);
+    for (const q of qs) {
+      const [kind, id] = q.itemKey.split(':');
+      assert.equal(kind, 'prov');
+      const p = provById.get(id);
+      assert.ok(p);
+      seen.add(id);
+      assert.ok(q.prompt.es.startsWith('¿A qué comunidad autónoma pertenece la provincia '));
+      assert.equal(q.answerId, 'ccaa:' + p.ccaa_id);
+      const answer = q.options.find((o) => o.id === q.answerId);
+      assert.equal(answer.label.es, ccaaById.get(p.ccaa_id).name_es);
+      assert.equal(answer.label.en, ccaaById.get(p.ccaa_id).name_en);
+      assert.equal(q.target.layer, 'ccaa');
+      assert.equal(q.target.id, p.ccaa_id);
+      assert.equal(q.target.city.lat, p.capital_lat);
+      assert.equal(q.target.city.lon, p.capital_lon);
+      for (const o of q.options) {
+        const c = ccaaById.get(o.id.slice(5));
+        assert.equal(c.type, 'comunidad', 'option is not a comunidad: ' + o.id);
+        assert.ok(!CIUDADES_AUTONOMAS.has(c.id), 'Ceuta/Melilla offered: ' + o.id);
+      }
     }
   }
-  assert.deepEqual([...seen].sort(), ['capital', 'inprovince', 'ofcapital']);
+  assert.equal(seen.size, provInMap.length, 'not every province is asked over the seeds');
 });
 
 test('world topics ask both directions', () => {

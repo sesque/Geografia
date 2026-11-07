@@ -9,9 +9,9 @@
   const state = {
     screen: 'player',
     player: null,
-    topic: 'es_prov',
+    topic: null,
     count: 10,
-    statsTopic: 'es_prov',
+    statsTopic: null,
     playerError: null,
     central: null,
     centralLoading: false,
@@ -39,6 +39,26 @@
 
   function safePending() {
     try { return Sync.pending() || 0; } catch (e) { return 0; }
+  }
+
+  function validTopic(id) {
+    return topics().some((x) => x.id === id);
+  }
+
+  function keepValid(list) {
+    return (list || []).filter((g) => g && validTopic(g.topic));
+  }
+
+  function keepValidAll(all) {
+    const out = {};
+    Object.keys(all || {}).forEach((k) => { out[k] = keepValid(all[k]); });
+    return out;
+  }
+
+  function ensureTopics() {
+    const first = topics()[0] && topics()[0].id;
+    if (!validTopic(state.topic)) state.topic = first;
+    if (!validTopic(state.statsTopic)) state.statsTopic = first;
   }
 
   function topics() {
@@ -173,6 +193,7 @@
   }
 
   function renderMenu() {
+    ensureTopics();
     const groups = { spain: [], world: [], locate: [] };
     topics().forEach((x) => { if (groups[x.group]) groups[x.group].push(x.id); });
     const sec = (key, ids) => '<h2>' + t(key) + '</h2><div class="row">' + ids.map(chip).join('') + '</div>';
@@ -189,6 +210,7 @@
   /* ---------- quiz ---------- */
 
   function startGame() {
+    ensureTopics();
     let qs = [];
     try { qs = Quiz.generate(state.topic, state.count) || []; } catch (e) { qs = []; }
     if (!qs.length) {
@@ -442,9 +464,11 @@
         all = Stats.merge(all, state.central);
         games = ciGet(all, state.player);
       }
+      all = keepValidAll(all);
+      games = keepValid(games);
     } catch (e) { games = []; all = {}; }
+    ensureTopics();
     const tl = topics().map((x) => x.id);
-    if (tl.indexOf(state.statsTopic) < 0) state.statsTopic = tl[0];
     const sum = Stats.topicSummary(games);
     const ov = Stats.overall(games);
 

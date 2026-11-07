@@ -1,5 +1,5 @@
 (function (root) {
-  const TOPIC_IDS = ['es_prov', 'es_ccaa', 'world_europa', 'world_america', 'world_asia', 'world_oceania', 'world_africa',
+  const TOPIC_IDS = ['es_ccaa_cap', 'es_ccaa_prov', 'world_europa', 'world_america', 'world_asia', 'world_oceania', 'world_africa',
     'loc_prov', 'loc_ccaa', 'loc_europa', 'loc_america', 'loc_asia', 'loc_oceania', 'loc_africa'];
 
   const dict = {
@@ -82,8 +82,8 @@
       msg_good: '¡Muy bien!',
       msg_ok: 'Buen intento, ¡a seguir practicando!',
       msg_low: 'A repasar un poco más',
-      'topic.es_prov': 'Capitales de provincia',
-      'topic.es_ccaa': 'Comunidades autónomas',
+      'topic.es_ccaa_cap': 'Capitales de comunidades autónomas',
+      'topic.es_ccaa_prov': 'Provincias de comunidades autónomas',
       'topic.world_europa': 'Europa',
       'topic.world_america': 'América',
       'topic.world_asia': 'Asia',
@@ -176,8 +176,8 @@
       msg_good: 'Very good!',
       msg_ok: 'Good try, keep practising!',
       msg_low: 'Time for a bit more review',
-      'topic.es_prov': 'Provincial capitals',
-      'topic.es_ccaa': 'Autonomous communities',
+      'topic.es_ccaa_cap': 'Capitals of autonomous communities',
+      'topic.es_ccaa_prov': 'Provinces of autonomous communities',
       'topic.world_europa': 'Europe',
       'topic.world_america': 'Americas',
       'topic.world_asia': 'Asia',

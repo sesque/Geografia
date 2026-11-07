@@ -52,9 +52,10 @@
   --gm-ui-line: #333b4d;
 }
 
-.geomap svg { display: block; width: 100%; background: var(--gm-sea); touch-action: pan-y; }
-.geomap.gm-interactive svg { touch-action: none; cursor: grab; }
-.geomap.gm-interactive svg:active { cursor: grabbing; }
+.geomap svg { display: block; width: 100%; background: var(--gm-sea); touch-action: pan-y; cursor: grab; }
+.geomap.gm-zoomed svg { touch-action: none; }
+.geomap.gm-dragging, .geomap.gm-dragging * { cursor: grabbing !important; }
+.geomap .gm-inset, .geomap .gm-inset * { cursor: default; }
 .geomap .gm-sea { fill: var(--gm-sea); }
 
 .geomap .gm-area {
