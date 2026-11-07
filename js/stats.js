@@ -30,14 +30,12 @@
     return summary;
   }
 
-  function ranking(allGames, topic, minTotal) {
+  function rankRows(allGames, keep, minTotal) {
     const threshold = typeof minTotal === 'number' ? minTotal : 10;
     const players = allGames && typeof allGames === 'object' ? allGames : {};
     const rows = [];
     Object.keys(players).forEach(function (player) {
-      const games = asGames(players[player]).filter(function (game) {
-        return game.topic === topic;
-      });
+      const games = asGames(players[player]).filter(keep);
       if (!games.length) return;
       let correct = 0;
       let total = 0;
@@ -53,6 +51,78 @@
       return b.total - a.total;
     });
     return rows;
+  }
+
+  function ranking(allGames, topic, minTotal) {
+    return rankRows(allGames, function (game) {
+      return game.topic === topic;
+    }, minTotal);
+  }
+
+  function overallRanking(allGames, minTotal) {
+    return rankRows(allGames, function () {
+      return true;
+    }, minTotal);
+  }
+
+  function compareDates(a, b) {
+    const left = Date.parse(a.date);
+    const right = Date.parse(b.date);
+    if (Number.isNaN(left) || Number.isNaN(right)) return 0;
+    return left - right;
+  }
+
+  function merge(local, central) {
+    const records = [];
+    const byId = Object.create(null);
+
+    function add(source, isCentral) {
+      if (!source || typeof source !== 'object') return;
+      Object.keys(source).forEach(function (name) {
+        asGames(source[name]).forEach(function (game) {
+          if (!game || typeof game !== 'object') return;
+          const id = game.id;
+          if (typeof id === 'string' && id) {
+            if (byId[id] !== undefined) {
+              const previous = records[byId[id]];
+              if (isCentral && !previous.central) {
+                previous.game = game;
+                previous.central = true;
+              }
+              return;
+            }
+            byId[id] = records.length;
+          }
+          records.push({ name: name, game: game, central: isCentral });
+        });
+      });
+    }
+
+    add(local, false);
+    add(central, true);
+
+    const groups = Object.create(null);
+    const order = [];
+    records.forEach(function (record) {
+      const key = String(record.name).toLowerCase();
+      if (!groups[key]) {
+        groups[key] = { name: record.name, games: [] };
+        order.push(key);
+      }
+      groups[key].games.push(record.game);
+    });
+
+    const result = {};
+    order.forEach(function (key) {
+      const group = groups[key];
+      Object.defineProperty(result, group.name, {
+        value: group.games.sort(compareDates),
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    });
+    return result;
   }
 
   function mostMissed(games, n) {
@@ -121,6 +191,8 @@
   const Stats = {
     topicSummary: topicSummary,
     ranking: ranking,
+    overallRanking: overallRanking,
+    merge: merge,
     mostMissed: mostMissed,
     streak: streak,
     progress: progress,

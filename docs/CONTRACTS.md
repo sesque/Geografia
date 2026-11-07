@@ -95,3 +95,35 @@ Implements exactly the screens, flow and styles of the approved `mockup/layout.h
 - result screen: n/N and %, buttons Repetir / Menú; the game is saved through `Store.recordGame` when the last answer is given.
 - stats screen: per-topic % table, ranking per topic (all players, `Stats.ranking`), last 5 games, most missed (names resolved from `GeoData` by `itemKey`), streak, progress line chart (inline SVG).
 - Accessible: buttons are real `<button>`s, focus visible, `lang` attribute updated, reduced-motion respected.
+
+# Central scores (Google Sheet) — v2 additions
+
+## Game ids
+`Game` gains an optional `id` (string, unique per game; `Sync.newId()`). `Store.recordGame` accepts and keeps it.
+
+## config.js → `GeoConfig`
+`window.GeoConfig = { sheetUrl: '' }`. Empty string = local-only mode (no network calls at all). The family pastes the Apps Script web-app URL here.
+
+## stats.js additions
+```js
+Stats.overallRanking(allGames, minTotal=10)  // [{ player, pct, total, games }] over ALL topics, same sort/min rule as ranking()
+Stats.merge(local, central)                  // both { [player]: Game[] }; returns { [player]: Game[] } union; games with the same id are counted once (central wins); games without id are kept as-is; players matched case-insensitively (canonical name = first seen); each list sorted oldest first by date
+```
+
+## sync.js → `Sync`
+`Sync.create({ url, storage, fetch })`; `window.Sync = Sync.create({ url: GeoConfig.sheetUrl, storage: localStorage (try/catch → in-memory), fetch: window.fetch })`.
+```js
+sync.enabled()                 // !!url
+sync.newId()                   // crypto.randomUUID() when available, else timestamp+random
+sync.submitGame(player, game)  // queue { player, game } (game must have id) under storage key 'geografia.queue.v1', then flush(); resolves, never rejects
+sync.flush()                   // sends queued items one at a time, in order: fetch(url, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ player, game }) }); dequeue only when response JSON has ok:true; on any failure stop and keep the rest; no concurrent flushes; resolves { sent, pending }
+sync.pending()                 // number of queued items
+sync.fetchAll()                // GET url + '?action=list'; resolves { [player]: Game[] } (rows grouped by player) or null when disabled/failed
+```
+Apps Script protocol (`apps-script/Code.gs`): `doPost(e)` parses `e.postData.contents` → `{ player, game }`, validates (player 1–24 chars, topic ≤40 chars, integers with 0 ≤ correct ≤ total ≤ 100, ISO date, answers array ≤100 items, payload ≤ 20 KB), ignores a duplicate `game.id`, appends a row `[id, player, topic, count, correct, total, date, answers-as-JSON]` under `LockService`, returns JSON `{ ok: true }` or `{ ok: false, error }`. `doGet(e)` with `action=list` returns `{ ok: true, games: [{ id, player, topic, count, correct, total, date, answers }] }`. The script creates its own spreadsheet "Geografía – Scores" on first use (SpreadsheetApp.create, id stored in PropertiesService script properties) and a header row.
+
+## app.js changes
+- On finishing a game: `game.id = Sync.newId()`, `Store.recordGame` locally, then `Sync.submitGame` (fire and forget).
+- Stats screen: fetch `Sync.fetchAll()`, show "loading…", then rankings from `Stats.merge(Store.allGames(), central)`; per-topic ranking (existing) plus a new **overall ranking**; highlight the current player's row; medals/numbers for the top 3; a small status line ("Synced with the family scoreboard" / "Offline: showing this device only" / "n games waiting to sync"); when `Sync.enabled()` is false, show only local data without any status line.
+- The player screen's existing-player list stays local, but when central data loads, also offer players found centrally (so a family member on a new device can pick their name).
+- New i18n strings in ES and EN.

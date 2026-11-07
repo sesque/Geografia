@@ -94,6 +94,9 @@
       if (typeof game.date !== 'string' || Number.isNaN(Date.parse(game.date))) {
         throw new Error('Game date must be a valid ISO string');
       }
+      if (game.id !== undefined && (typeof game.id !== 'string' || !game.id)) {
+        throw new Error('Game id must be a non-empty string');
+      }
       if (!Array.isArray(game.answers)) throw new Error('Game answers must be an array');
       for (let i = 0; i < game.answers.length; i += 1) {
         const answer = game.answers[i];
@@ -126,6 +129,7 @@
           return { itemKey: answer.itemKey, correct: answer.correct };
         })
       };
+      if (game.id !== undefined) stored.id = game.id;
       entry.games.push(stored);
       write(state);
       return clone(stored);

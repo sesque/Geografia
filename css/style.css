@@ -97,3 +97,7 @@ ol.missed{margin:0;padding-left:1.4em}
 
 .between h2{margin:0}
 .between{margin-bottom:12px}
+.sync{margin:8px 0 0;font-size:13px;color:var(--mute)}
+.sync.warn{color:var(--bad)}
+.medal{font-size:18px;line-height:1}
+tr.me td{background:color-mix(in srgb,var(--accent) 14%,transparent)}

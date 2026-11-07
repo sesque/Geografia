@@ -13,8 +13,33 @@
     count: 10,
     statsTopic: 'es_prov',
     playerError: null,
+    central: null,
+    centralLoading: false,
+    syncInfo: null,
     game: null
   };
+
+  const syncOn = () => !!(window.Sync && window.Sync.enabled && window.Sync.enabled());
+
+  function ciGet(obj, name) {
+    const k = Object.keys(obj || {}).find((x) => x.toLowerCase() === String(name).toLowerCase());
+    return k ? obj[k] : [];
+  }
+
+  function loadCentral() {
+    if (!syncOn()) return Promise.resolve(null);
+    state.centralLoading = true;
+    return Promise.resolve().then(() => Sync.fetchAll()).catch(() => null).then((c) => {
+      state.centralLoading = false;
+      state.central = c;
+      state.syncInfo = { ok: !!c, pending: safePending() };
+      return c;
+    });
+  }
+
+  function safePending() {
+    try { return Sync.pending() || 0; } catch (e) { return 0; }
+  }
 
   function topics() {
     return (window.Quiz && window.Quiz.TOPICS) || [];
@@ -97,6 +122,8 @@
   function renderPlayer() {
     let names = [];
     try { names = Store.listPlayers(); } catch (e) { names = []; }
+    const lower = names.map((n) => n.toLowerCase());
+    const remote = state.central ? Object.keys(state.central).filter((n) => lower.indexOf(n.toLowerCase()) < 0).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())) : [];
     const err = state.playerError;
     $('s-player').innerHTML =
       '<div class="card"><h2>' + t('new_player') + '</h2>' +
@@ -104,10 +131,11 @@
       '<input id="player-name" maxlength="60" autocomplete="off" placeholder="' + esc(t('name')) + '" aria-label="' + esc(t('name')) + '"' + (err ? ' aria-invalid="true" aria-describedby="player-err"' : '') + '>' +
       '<button type="submit" class="on">' + t('enter') + '</button></form>' +
       '<p class="err" id="player-err" role="alert">' + (err ? esc(err) : '') + '</p>' +
-      '<h2>' + t('existing') + '</h2>' +
+      ((names.length || !remote.length) ? '<h2>' + t('existing') + '</h2>' : '') +
       (names.length
         ? '<div class="row">' + names.map((n) => '<button type="button" data-act="pick-player" data-name="' + esc(n) + '">' + esc(n) + '</button>').join('') + '</div>'
-        : '<p class="note">' + t('no_players') + '</p>') +
+        : (remote.length ? '' : '<p class="note">' + t('no_players') + '</p>')) +
+      (remote.length ? '<h2>' + t('central_players') + '</h2><div class="row">' + remote.map((n) => '<button type="button" data-act="pick-player" data-name="' + esc(n) + '">' + esc(n) + '</button>').join('') + '</div>' : '') +
       '</div>';
   }
 
@@ -293,14 +321,20 @@
     if (g.saved) return;
     g.saved = true;
     try {
-      Store.recordGame(state.player, {
+      const game = {
+        id: window.Sync ? Sync.newId() : undefined,
         topic: g.topic,
         count: g.count,
         correct: g.correct,
         total: g.questions.length,
         date: new Date().toISOString(),
         answers: g.answers.slice()
-      });
+      };
+      if (game.id === undefined) delete game.id;
+      Store.recordGame(state.player, game);
+      if (syncOn()) {
+        try { Promise.resolve(Sync.submitGame(state.player, game)).catch(() => {}); } catch (e) { /* ignore */ }
+      }
     } catch (e) {
       g.saveError = true;
     }
@@ -371,9 +405,44 @@
     return s + '</svg>';
   }
 
+  function openStats() {
+    renderStats();
+    show('stats');
+    if (!syncOn()) return;
+    loadCentral().then(() => { if (state.screen === 'stats') renderStats(); });
+  }
+
+  function rankTable(rk) {
+    const medals = ['🥇', '🥈', '🥉'];
+    return '<div class="scroll"><table><tr><th>#</th><th>' + t('player') + '</th><th class="num">' + t('pct') + '</th><th class="num">' + t('answers') + '</th></tr>' +
+      rk.map((r, i) => {
+        const me = r.player.toLowerCase() === String(state.player).toLowerCase();
+        const pos = i < 3 ? '<span class="medal" role="img" aria-label="' + esc(t('medal_' + (i + 1))) + '">' + medals[i] + '</span>' : (i + 1);
+        return '<tr' + (me ? ' class="me"' : '') + '><td>' + pos + '</td><td>' + esc(r.player) + (me ? ' <span class="note">(' + t('you') + ')</span>' : '') + '</td><td class="num">' + fmtPct(r.pct) + ' %</td><td class="num">' + r.total + '</td></tr>';
+      }).join('') + '</table></div>';
+  }
+
+  function syncLine() {
+    if (!syncOn()) return '';
+    if (state.centralLoading) return '<p class="sync" role="status">' + t('loading') + '</p>';
+    const pend = safePending();
+    let msg, warn = false;
+    if (!state.central) { msg = t('sync_offline'); warn = true; }
+    else if (pend > 0) msg = t('sync_pending', { n: pend });
+    else msg = t('sync_ok');
+    if (!state.central && pend > 0) msg += ' · ' + t('sync_pending', { n: pend });
+    return '<p class="sync' + (warn ? ' warn' : '') + '" role="status">' + esc(msg) + '</p>';
+  }
+
   function renderStats() {
     let games = [], all = {};
-    try { games = Store.getGames(state.player); all = Store.allGames(); } catch (e) { games = []; all = {}; }
+    try {
+      games = Store.getGames(state.player); all = Store.allGames();
+      if (syncOn() && state.central) {
+        all = Stats.merge(all, state.central);
+        games = ciGet(all, state.player);
+      }
+    } catch (e) { games = []; all = {}; }
     const tl = topics().map((x) => x.id);
     if (tl.indexOf(state.statsTopic) < 0) state.statsTopic = tl[0];
     const sum = Stats.topicSummary(games);
@@ -403,10 +472,12 @@
       tl.map((id) => '<option value="' + id + '"' + (id === state.statsTopic ? ' selected' : '') + '>' + esc(topicLabel(id)) + '</option>').join('') + '</select>';
 
     const rk = Stats.ranking(all, state.statsTopic, MIN_RANK);
-    const ranking = '<div class="card"><h2>' + t('rank') + '</h2><div class="row between">' + sel + '</div>' + (rk.length
-      ? '<div class="scroll"><table><tr><th>#</th><th>' + t('player') + '</th><th class="num">' + t('pct') + '</th><th class="num">' + t('answers') + '</th></tr>' +
-        rk.map((r, i) => '<tr' + (r.player === state.player ? ' class="me"' : '') + '><td>' + (i + 1) + '</td><td>' + esc(r.player) + '</td><td class="num">' + fmtPct(r.pct) + ' %</td><td class="num">' + r.total + '</td></tr>').join('') + '</table></div>'
-      : '<p class="note">' + t('rank_empty') + '</p>') +
+    const ranking = '<div class="card"><h2>' + t('rank_topic') + '</h2><div class="row between">' + sel + '</div>' + (rk.length
+      ? rankTable(rk) : '<p class="note">' + t('rank_empty') + '</p>') +
+      '<p class="note">' + t('rank_min', { n: MIN_RANK }) + '</p></div>';
+    let ork = [];
+    try { ork = Stats.overallRanking ? Stats.overallRanking(all, MIN_RANK) : []; } catch (e) { ork = []; }
+    const overallCard = '<div class="card"><h2>' + t('rank_overall') + '</h2>' + (ork.length ? rankTable(ork) : '<p class="note">' + t('rank_empty') + '</p>') +
       '<p class="note">' + t('rank_min', { n: MIN_RANK }) + '</p></div>';
 
     const prog = Stats.progress(games, state.statsTopic);
@@ -416,7 +487,7 @@
     $('s-stats').innerHTML =
       '<div class="row between"><h2>' + t('stats_title') + ' · ' + esc(state.player || '') + '</h2><button type="button" data-act="menu">' + t('back') + '</button></div>' +
       summary + '<div class="stats-grid">' + streak + missed + '</div><div style="height:16px"></div>' +
-      '<div class="stats-grid">' + lastHtml + progress + '</div><div style="height:16px"></div>' + ranking;
+      '<div class="stats-grid">' + lastHtml + progress + '</div><div style="height:16px"></div>' + syncLine() + '<div class="stats-grid">' + overallCard + ranking + '</div>';
   }
 
   /* ---------- events ---------- */
@@ -427,7 +498,7 @@
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const a = b.dataset.act;
-    if (a === 'pick-player') enterMenu(b.dataset.name);
+    if (a === 'pick-player') { let nm = b.dataset.name; try { nm = Store.addPlayer(nm); } catch (er) { /* keep name */ } enterMenu(nm); }
     else if (a === 'topic') { state.topic = b.dataset.topic; renderMenu(); const f = document.querySelector('[data-topic="' + state.topic + '"]'); if (f) f.focus(); }
     else if (a === 'count') { state.count = +b.dataset.n; renderMenu(); const f = document.querySelector('[data-n="' + state.count + '"]'); if (f) f.focus(); }
     else if (a === 'start') startGame();
@@ -435,7 +506,7 @@
     else if (a === 'next') nextQuestion();
     else if (a === 'again') { state.topic = state.game.topic; state.count = state.game.count; startGame(); }
     else if (a === 'menu') { renderMenu(); show('menu'); }
-    else if (a === 'stats') { renderStats(); show('stats'); }
+    else if (a === 'stats') openStats();
   });
 
   document.addEventListener('submit', (e) => {
@@ -523,6 +594,7 @@
     splashTimer = setTimeout(endSplash, 5000);
     renderPlayer();
     show('player');
+    if (syncOn()) loadCentral().then(() => { if (state.screen === 'player') { const v = $('player-name') ? $('player-name').value : ''; renderPlayer(); if ($('player-name')) $('player-name').value = v; } });
   }
 
   init();

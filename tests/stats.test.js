@@ -155,3 +155,94 @@ test('overall aggregates every game and handles empty input', () => {
   assert.deepEqual(Stats.overall([]), { games: 0, correct: 0, total: 0, pct: 0 });
   assert.deepEqual(Stats.overall(undefined), { games: 0, correct: 0, total: 0, pct: 0 });
 });
+
+test('overallRanking aggregates across every topic with the ranking rules', () => {
+  const allGames = {
+    Ana: [game({ correct: 4, total: 5 }), game({ topic: 'es_ccaa', correct: 5, total: 5 })],
+    Bea: [game({ correct: 6, total: 10 })],
+    Carla: [game({ correct: 2, total: 4 })],
+    Dan: [game({ topic: 'world_asia', correct: 10, total: 10 })]
+  };
+  assert.deepEqual(Stats.overallRanking(allGames), [
+    { player: 'Dan', pct: 100, total: 10, games: 1 },
+    { player: 'Ana', pct: 90, total: 10, games: 2 },
+    { player: 'Bea', pct: 60, total: 10, games: 1 }
+  ]);
+  assert.deepEqual(Stats.overallRanking(allGames, 10).map((r) => r.player), ['Dan', 'Ana', 'Bea']);
+  assert.deepEqual(Stats.overallRanking(allGames, 0).map((r) => r.player), ['Dan', 'Ana', 'Bea', 'Carla']);
+  assert.deepEqual(Stats.overallRanking({}, 0), []);
+  assert.deepEqual(Stats.overallRanking(null), []);
+  assert.deepEqual(Stats.overallRanking(undefined), []);
+});
+
+test('overallRanking sorts equal pct by total and then keeps insertion order', () => {
+  const allGames = {
+    Ana: [game({ correct: 9, total: 10 })],
+    Bea: [game({ correct: 18, total: 20 })]
+  };
+  assert.deepEqual(Stats.overallRanking(allGames, 0).map((r) => r.player), ['Bea', 'Ana']);
+});
+
+test('merge unions players case-insensitively and keeps the first canonical name', () => {
+  const local = {
+    ana: [game({ id: 'a1', date: '2026-01-01T10:00:00.000Z' })],
+    Bea: [game({ id: 'b1', date: '2026-01-02T10:00:00.000Z' })]
+  };
+  const central = {
+    Ana: [game({ id: 'a2', date: '2026-01-03T10:00:00.000Z' })],
+    Carla: [game({ id: 'c1', date: '2026-01-04T10:00:00.000Z' })]
+  };
+  const merged = Stats.merge(local, central);
+  assert.deepEqual(Object.keys(merged), ['ana', 'Bea', 'Carla']);
+  assert.deepEqual(merged.ana.map((g) => g.id), ['a1', 'a2']);
+  assert.deepEqual(merged.Bea.map((g) => g.id), ['b1']);
+  assert.deepEqual(merged.Carla.map((g) => g.id), ['c1']);
+});
+
+test('merge counts a shared id once and central wins', () => {
+  const local = {
+    Ana: [game({ id: 'x', correct: 1, total: 2, date: '2026-01-01T10:00:00.000Z' })]
+  };
+  const central = {
+    Ana: [game({ id: 'x', correct: 2, total: 2, date: '2026-01-01T10:00:00.000Z' })]
+  };
+  const merged = Stats.merge(local, central);
+  assert.equal(merged.Ana.length, 1);
+  assert.equal(merged.Ana[0].correct, 2);
+});
+
+test('merge keeps games without id and sorts each list oldest first', () => {
+  const local = {
+    Ana: [
+      game({ date: '2026-01-05T10:00:00.000Z' }),
+      game({ date: '2026-01-01T10:00:00.000Z' })
+    ]
+  };
+  const central = {
+    Ana: [game({ id: 'c1', date: '2026-01-03T10:00:00.000Z' })]
+  };
+  const merged = Stats.merge(local, central);
+  assert.equal(merged.Ana.length, 3);
+  assert.deepEqual(merged.Ana.map((g) => g.date), [
+    '2026-01-01T10:00:00.000Z',
+    '2026-01-03T10:00:00.000Z',
+    '2026-01-05T10:00:00.000Z'
+  ]);
+});
+
+test('merge handles empty and missing inputs', () => {
+  assert.deepEqual(Stats.merge({}, {}), {});
+  assert.deepEqual(Stats.merge(null, null), {});
+  assert.deepEqual(Stats.merge(undefined, undefined), {});
+  const local = { Ana: [game({ id: 'a1' })] };
+  assert.deepEqual(Stats.merge(local, null), { Ana: [game({ id: 'a1' })] });
+  assert.deepEqual(Stats.merge(null, local), { Ana: [game({ id: 'a1' })] });
+});
+
+test('merge does not mutate its inputs', () => {
+  const local = { Ana: [game({ date: '2026-01-05T10:00:00.000Z' }), game({ date: '2026-01-01T10:00:00.000Z' })] };
+  const central = { Ana: [game({ id: 'c1', date: '2026-01-03T10:00:00.000Z' })] };
+  Stats.merge(local, central);
+  assert.deepEqual(local.Ana.map((g) => g.date), ['2026-01-05T10:00:00.000Z', '2026-01-01T10:00:00.000Z']);
+  assert.equal(central.Ana.length, 1);
+});
