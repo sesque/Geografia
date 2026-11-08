@@ -7,6 +7,7 @@
     { id: 'world_asia', group: 'world', labelKey: 'topic.world_asia' },
     { id: 'world_oceania', group: 'world', labelKey: 'topic.world_oceania' },
     { id: 'world_africa', group: 'world', labelKey: 'topic.world_africa' },
+    { id: 'world_flags', group: 'world', labelKey: 'topic.world_flags' },
     { id: 'loc_prov', group: 'locate', labelKey: 'topic.loc_prov' },
     { id: 'loc_ccaa', group: 'locate', labelKey: 'topic.loc_ccaa' },
     { id: 'loc_europa', group: 'locate', labelKey: 'topic.loc_europa' },
@@ -228,6 +229,30 @@
     });
   }
 
+  function flagItems() {
+    return countryItems(null).filter(i => i.raw.population_m != null && Number(i.raw.population_m) >= 1);
+  }
+
+  function worldFlagsQuestions(topicId, count, rng) {
+    const items = flagItems();
+    const picked = shuffle(items, rng).slice(0, Math.min(count, items.length));
+    return picked.map(item => {
+      const same = shuffle(items.filter(x => x.key !== item.key && x.continent === item.continent), rng);
+      const rest = shuffle(items.filter(x => x.key !== item.key && x.continent !== item.continent), rng);
+      return {
+        topic: topicId,
+        kind: 'mc',
+        itemKey: item.key,
+        prompt: { es: '¿A qué país pertenece esta bandera?', en: 'Which country does this flag belong to?' },
+        image: 'assets/flags/' + item.raw.iso_a2 + '.svg',
+        options: buildOptions(item, same.concat(rest), x => x.name, rng),
+        answerId: item.key,
+        target: { layer: 'world', id: item.id, city: { lat: item.lat, lon: item.lon, name: item.capital } },
+        mapView: item.continent
+      };
+    });
+  }
+
   function locateQuestions(topicId, items, layer, view, count, rng) {
     const picked = shuffle(items, rng).slice(0, Math.min(count, items.length));
     return picked.map(item => ({
@@ -249,6 +274,7 @@
     if (topicId === 'es_ccaa_prov') return esCcaaProvQuestions(topicId, n, random);
     if (topicId === 'loc_prov') return locateQuestions(topicId, provItems(), 'provincias', 'spain', n, random);
     if (topicId === 'loc_ccaa') return locateQuestions(topicId, ccaaItems(), 'ccaa', 'spain', n, random);
+    if (topicId === 'world_flags') return worldFlagsQuestions(topicId, n, random);
     const m = /^(world|loc)_(europa|america|asia|oceania|africa)$/.exec(topicId);
     if (m) {
       if (m[1] === 'world') return worldQuestions(topicId, m[2], n, random);

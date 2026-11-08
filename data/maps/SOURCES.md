@@ -22,3 +22,7 @@
 
 ## Reproduce
 Raw downloads are kept outside the repo. Run `npx mapshaper` as above, `scripts/fix_world.py`, then `python3 scripts/check_maps.py`.
+
+## Flags
+
+assets/flags/*.svg: 4x3 SVG flags from flag-icons 7.2.3 (https://github.com/lipis/flag-icons, MIT, (c) 2013 Panayiotis Lipiridis), downloaded from https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/<code>.svg. Only countries with population >= 1 million are included. Licence: assets/flags/LICENSE-flag-icons.txt. Population figures in data/paises.json (population_m): UN World Population Prospects 2023, mid-2023 estimate (rounded; a few small states approximated).

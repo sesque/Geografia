@@ -312,3 +312,22 @@ test('works without any storage', async () => {
   assert.deepEqual(await sync.submitGame('Ana', game()), { sent: 0, pending: 1 });
   assert.equal(sync.pending(), 1);
 });
+
+test('discardPending removes only that player\'s queued games', async () => {
+  const storage = fakeStorage();
+  const fetch = recordingFetch(() => Promise.reject(new Error('offline')));
+  const sync = Sync.create({ url: URL, storage, fetch });
+  await sync.submitGame('Ana', game({ id: 'a1' }));
+  await sync.submitGame('Luis', game({ id: 'l1' }));
+  await sync.submitGame('ana', game({ id: 'a2' }));
+  assert.equal(sync.pending(), 3);
+  assert.equal(sync.discardPending('Ana'), 2);
+  assert.equal(sync.pending(), 1);
+  assert.equal(JSON.parse(storage.getItem(QUEUE_KEY))[0].player, 'Luis');
+  assert.equal(sync.discardPending('Nobody'), 0);
+});
+
+test('discardPending is a no-op when disabled', () => {
+  const sync = Sync.create({ url: '', storage: fakeStorage(), fetch: null });
+  assert.equal(sync.discardPending('Ana'), 0);
+});

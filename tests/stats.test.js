@@ -246,3 +246,58 @@ test('merge does not mutate its inputs', () => {
   assert.deepEqual(local.Ana.map((g) => g.date), ['2026-01-05T10:00:00.000Z', '2026-01-01T10:00:00.000Z']);
   assert.equal(central.Ana.length, 1);
 });
+
+test('level derives from 10 XP per correct answer', () => {
+  assert.deepEqual(Stats.level(0), { level: 1, name: 'level_1', xp: 0, base: 0, nextXp: 100, pct: 0 });
+  const l = Stats.level(12);
+  assert.equal(l.level, 2);
+  assert.equal(l.xp, 120);
+  assert.equal(l.base, 100);
+  assert.equal(l.nextXp, 250);
+  assert.equal(l.pct, 13);
+  assert.equal(Stats.level(9).level, 1);
+  assert.equal(Stats.level(10).level, 2);
+});
+
+test('level caps at the top and tolerates bad input', () => {
+  const top = Stats.level(100000);
+  assert.equal(top.level, 12);
+  assert.equal(top.nextXp, null);
+  assert.equal(top.pct, 100);
+  assert.equal(Stats.level(-5).level, 1);
+  assert.equal(Stats.level(undefined).level, 1);
+});
+
+test('recordStatus compares by topic across game lengths', () => {
+  const all = {
+    Ana: [game({ topic: 'a', count: 10, correct: 8, total: 10 }), game({ topic: 'a', count: 20, correct: 20, total: 20 })],
+    Daniel: [game({ topic: 'a', count: 10, correct: 9, total: 10 }), game({ topic: 'b', count: 10, correct: 10, total: 10 })]
+  };
+  const r = Stats.recordStatus(all, 'ana', game({ topic: 'a', count: 10, correct: 9, total: 10 }));
+  assert.equal(r.personal, 'none');
+  assert.equal(r.absolute, 'none');
+  assert.equal(r.personalBest, 100);
+  assert.deepEqual(r.absoluteBest, { pct: 100, player: 'Ana' });
+  const n = Stats.recordStatus(all, 'Daniel', game({ topic: 'a', count: 30, correct: 30, total: 30 }));
+  assert.equal(n.personal, 'new');
+  assert.equal(n.absolute, 'tie');
+  const none = Stats.recordStatus(all, 'Daniel', game({ topic: 'a', count: 10, correct: 5, total: 10 }));
+  assert.equal(none.personal, 'none');
+  assert.equal(none.absolute, 'none');
+  const other = Stats.recordStatus(all, 'Ana', game({ topic: 'zzz', count: 10, correct: 5, total: 10 }));
+  assert.equal(other.personal, 'first');
+  assert.equal(other.absolute, 'first');
+});
+
+test('recordStatus reports first games', () => {
+  const all = { Daniel: [game({ topic: 'a', count: 10, correct: 9, total: 10 })] };
+  const r = Stats.recordStatus(all, 'Ana', game({ topic: 'a', count: 10, correct: 1, total: 10 }));
+  assert.equal(r.personal, 'first');
+  assert.equal(r.absolute, 'none');
+  assert.equal(r.personalBest, null);
+  const f = Stats.recordStatus({}, 'Ana', game({ topic: 'a', count: 10, correct: 1, total: 10 }));
+  assert.equal(f.personal, 'first');
+  assert.equal(f.absolute, 'first');
+  assert.equal(f.absoluteBest, null);
+  assert.equal(Stats.recordStatus(null, 'Ana', game()).absolute, 'first');
+});

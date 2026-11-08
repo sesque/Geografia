@@ -188,7 +188,50 @@
     return { games: list.length, correct: correct, total: total, pct: pctOf(correct, total) };
   }
 
+  function recordStatus(allGames, player, game) {
+    const g = game || {};
+    const key = String(player).toLowerCase();
+    const pct = pctOf(g.correct, g.total);
+    let pBest = null;
+    let aBest = null;
+    Object.keys(allGames || {}).forEach(function (name) {
+      asGames(allGames[name]).forEach(function (old) {
+        if (!old || old.topic !== g.topic) return;
+        const p = pctOf(old.correct, old.total);
+        if (aBest === null || p > aBest.pct) aBest = { pct: p, player: name };
+        if (String(name).toLowerCase() === key && (pBest === null || p > pBest)) pBest = p;
+      });
+    });
+    function cmp(best) {
+      if (best === null) return 'first';
+      if (pct > best) return 'new';
+      return pct === best ? 'tie' : 'none';
+    }
+    return {
+      personal: cmp(pBest),
+      absolute: cmp(aBest === null ? null : aBest.pct),
+      personalBest: pBest,
+      absoluteBest: aBest
+    };
+  }
+
+  const XP_PER_CORRECT = 10;
+  const LEVEL_XP = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000, 5000];
+
+  function level(totalCorrect) {
+    const n = Number(totalCorrect);
+    const xp = (isFinite(n) && n > 0 ? Math.floor(n) : 0) * XP_PER_CORRECT;
+    let lv = 0;
+    for (let i = 0; i < LEVEL_XP.length; i += 1) if (xp >= LEVEL_XP[i]) lv = i;
+    const base = LEVEL_XP[lv];
+    const nextXp = lv + 1 < LEVEL_XP.length ? LEVEL_XP[lv + 1] : null;
+    const pct = nextXp === null ? 100 : Math.floor((xp - base) / (nextXp - base) * 100);
+    return { level: lv + 1, name: 'level_' + (lv + 1), xp: xp, base: base, nextXp: nextXp, pct: pct };
+  }
+
   const Stats = {
+    level: level,
+    recordStatus: recordStatus,
     topicSummary: topicSummary,
     ranking: ranking,
     overallRanking: overallRanking,

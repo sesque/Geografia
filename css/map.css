@@ -1,55 +1,27 @@
 .geomap {
-  --gm-sea: #dbe9f4;
-  --gm-land: #ece4d0;
-  --gm-border: #a9a290;
-  --gm-hover: #f8dc9c;
-  --gm-target: #f0a21a;
-  --gm-correct: #2e9e5b;
-  --gm-wrong: #d64545;
-  --gm-city: #1d2433;
-  --gm-ink: #1d2433;
-  --gm-mute: #6b7385;
-  --gm-pin: #7d7664;
-  --gm-halo: rgba(255, 255, 255, .88);
-  --gm-ui-bg: #ffffff;
-  --gm-ui-line: #d9d5ca;
+  --gm-sea: #0b1648;
+  --gm-land: #22357f;
+  --gm-border: #5b78ff;
+  --gm-hover: #3e5ccf;
+  --gm-target: #ffb300;
+  --gm-correct: #2dff9a;
+  --gm-wrong: #ff4d6d;
+  --gm-city: #ffffff;
+  --gm-ink: #f1f4ff;
+  --gm-mute: #9aa6e0;
+  --gm-pin: #8ea2ff;
+  --gm-halo: rgba(8, 19, 63, .88);
+  --gm-ui-bg: #161f55;
+  --gm-ui-line: #2c3a85;
   position: relative;
   width: 100%;
   overflow: hidden;
   background: var(--gm-sea);
-  border-radius: 10px;
-  border: 1px solid var(--gm-ui-line);
+  border-radius: 14px;
+  border: 2px solid var(--gm-ui-line);
   line-height: 0;
   user-select: none;
   -webkit-user-select: none;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .geomap {
-    --gm-sea: #1d2f40;
-    --gm-land: #3a3a33;
-    --gm-border: #6a675b;
-    --gm-hover: #7a6430;
-    --gm-city: #f1f2f6;
-    --gm-ink: #e8eaf0;
-    --gm-mute: #98a0b3;
-    --gm-pin: #a9a595;
-    --gm-halo: rgba(20, 26, 36, .85);
-    --gm-ui-bg: #1f2430;
-    --gm-ui-line: #333b4d;
-  }
-}
-:root[data-theme="dark"] .geomap {
-  --gm-sea: #1d2f40;
-  --gm-land: #3a3a33;
-  --gm-border: #6a675b;
-  --gm-hover: #7a6430;
-  --gm-city: #f1f2f6;
-  --gm-ink: #e8eaf0;
-  --gm-mute: #98a0b3;
-  --gm-pin: #a9a595;
-  --gm-halo: rgba(20, 26, 36, .85);
-  --gm-ui-bg: #1f2430;
-  --gm-ui-line: #333b4d;
 }
 
 .geomap svg { display: block; width: 100%; background: var(--gm-sea); touch-action: pan-y; cursor: grab; }

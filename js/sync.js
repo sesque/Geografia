@@ -42,6 +42,18 @@
       return readQueue().length;
     }
 
+    function discardPending(player) {
+      if (!enabled()) return 0;
+      const key = String(player).toLowerCase();
+      const queue = readQueue();
+      const kept = queue.filter(function (item) {
+        return !(item && String(item.player).toLowerCase() === key);
+      });
+      const removed = queue.length - kept.length;
+      if (removed > 0) writeQueue(kept);
+      return removed;
+    }
+
     function newId() {
       const cryptoObj = root.crypto;
       if (cryptoObj && typeof cryptoObj.randomUUID === 'function') {
@@ -164,6 +176,7 @@
       submitGame: submitGame,
       flush: flush,
       pending: pending,
+      discardPending: discardPending,
       fetchAll: fetchAll
     };
   }

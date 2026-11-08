@@ -16,6 +16,12 @@ const GeoData = {
     ccaa: read('data/maps/spain-ccaa.geojson')
   }
 };
+// Another worker is adding iso_a2/population_m to data/paises.json; fill them in if absent.
+for (const p of GeoData.paises) {
+  if (!p.iso_a2) p.iso_a2 = String(p.iso_a3 || '').toLowerCase();
+  if (p.population_m == null) p.population_m = 1;
+}
+
 globalThis.GeoData = GeoData;
 
 const Quiz = require('../js/quiz.js');
@@ -38,6 +44,9 @@ const comunidadesInMap = ccaaInMap.filter((c) => c.type === 'comunidad');
 const countriesIn = (continent) => GeoData.paises.filter(
   (p) => p.continent === continent && !isDisputed(p) && worldIds.has(String(p.iso_n3))
 );
+const flagCountries = GeoData.paises.filter(
+  (p) => p.population_m >= 1 && !isDisputed(p) && worldIds.has(String(p.iso_n3))
+);
 
 const CIUDADES_AUTONOMAS = new Set(['ceuta', 'melilla']);
 
@@ -46,6 +55,7 @@ function itemCount(topic) {
   if (topic === 'es_ccaa_prov') return provInMap.length;
   if (topic === 'loc_prov') return provInMap.length;
   if (topic === 'loc_ccaa') return ccaaInMap.length;
+  if (topic === 'world_flags') return flagCountries.length;
   const m = /^(?:world|loc)_(europa|america|asia|oceania|africa)$/.exec(topic);
   return countriesIn(m[1]).length;
 }
@@ -79,6 +89,7 @@ function expectedAnswer(q) {
     const p = paisById.get(id);
     if (es.startsWith('¿Cuál es la capital de ')) return { es: p.capital_es, en: p.capital_en };
     if (es.startsWith('¿De qué país es capital ')) return { es: p.name_es, en: p.name_en };
+    if (es.startsWith('¿A qué país pertenece esta bandera?')) return { es: p.name_es, en: p.name_en };
   }
   throw new Error('unrecognized prompt for ' + q.itemKey + ': ' + es);
 }
@@ -98,6 +109,16 @@ function checkQuestion(q, topic) {
 
   const [ikind, iid] = q.itemKey.split(':');
   if (ikind === 'pais') assert.ok(!isDisputed(paisById.get(iid)), 'disputed country asked: ' + iid);
+
+  if (topic === 'world_flags') {
+    const p = paisById.get(iid);
+    assert.ok(p.population_m >= 1, 'country under 1M asked: ' + iid);
+    assert.equal(q.image, 'assets/flags/' + p.iso_a2 + '.svg');
+    assert.match(q.image, /^assets\/flags\/[a-z]{2}\.svg$/);
+    assert.ok(fs.existsSync(path.join(ROOT, q.image)), 'missing flag file ' + q.image);
+  } else {
+    assert.equal(q.image, undefined, 'image must only be present on world_flags');
+  }
 
   if (q.kind === 'locate') {
     assert.ok(!q.options || q.options.length === 0, 'locate question has options');
@@ -131,7 +152,9 @@ function checkQuestion(q, topic) {
   for (const o of q.options) {
     assert.ok(o.id.startsWith(prefix), 'unexpected option kind ' + o.id);
     if (o.id.startsWith('pais:')) {
-      assert.ok(!isDisputed(paisById.get(o.id.slice(5))), 'disputed country offered: ' + o.id);
+      const op = paisById.get(o.id.slice(5));
+      assert.ok(!isDisputed(op), 'disputed country offered: ' + o.id);
+      if (topic === 'world_flags') assert.ok(op.population_m >= 1, 'country under 1M offered: ' + o.id);
     }
     if (topic === 'es_ccaa_cap' || topic === 'es_ccaa_prov') {
       const ccaaId = o.id.slice(5);
@@ -140,7 +163,7 @@ function checkQuestion(q, topic) {
     }
   }
 
-  if (topic.startsWith('world_')) {
+  if (topic.startsWith('world_') && topic !== 'world_flags') {
     const cont = topic.slice(6);
     if (countriesIn(cont).length >= 5) {
       for (const o of q.options) {
@@ -161,6 +184,7 @@ function checkQuestion(q, topic) {
 test('TOPICS match the contract', () => {
   assert.deepEqual(Quiz.TOPICS.map((t) => t.id), [
     'es_ccaa_cap', 'es_ccaa_prov', 'world_europa', 'world_america', 'world_asia', 'world_oceania', 'world_africa',
+    'world_flags',
     'loc_prov', 'loc_ccaa', 'loc_europa', 'loc_america', 'loc_asia', 'loc_oceania', 'loc_africa'
   ]);
   for (const t of Quiz.TOPICS) {
@@ -258,6 +282,79 @@ test('es_ccaa_prov asks every province about its own comunidad', () => {
     }
   }
   assert.equal(seen.size, provInMap.length, 'not every province is asked over the seeds');
+});
+
+test('world_flags generates the right counts', () => {
+  for (const count of [10, 20, 30]) {
+    for (const seed of SEEDS) {
+      const qs = Quiz.generate('world_flags', count, mulberry32(seed));
+      assert.equal(qs.length, Math.min(count, flagCountries.length), `count ${count} seed ${seed}`);
+      assert.equal(new Set(qs.map((q) => q.itemKey)).size, qs.length, 'repeated item');
+    }
+  }
+});
+
+test('world_flags questions use the flag of the answer country', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    for (const q of Quiz.generate('world_flags', 30, mulberry32(seed))) {
+      assert.equal(q.kind, 'mc');
+      assert.equal(q.prompt.es, '¿A qué país pertenece esta bandera?');
+      assert.equal(q.prompt.en, 'Which country does this flag belong to?');
+      const p = paisById.get(q.itemKey.split(':')[1]);
+      assert.equal(q.image, 'assets/flags/' + p.iso_a2 + '.svg');
+      assert.match(q.image, /^assets\/flags\/[a-z]{2}\.svg$/);
+      assert.ok(fs.existsSync(path.join(ROOT, q.image)), 'missing ' + q.image);
+      assert.equal(q.answerId, q.itemKey);
+      assert.equal(q.answerId.slice(5), String(p.iso_n3));
+      assert.equal(q.target.id, String(p.iso_n3));
+      assert.equal(q.target.layer, 'world');
+      assert.equal(q.mapView, p.continent);
+      assert.equal(q.target.city.lat, p.capital_lat);
+      assert.equal(q.target.city.lon, p.capital_lon);
+      const answer = q.options.find((o) => o.id === q.answerId);
+      assert.equal(answer.label.es, p.name_es);
+      assert.equal(answer.label.en, p.name_en);
+    }
+  }
+});
+
+test('world_flags excludes small and disputed countries', () => {
+  const small = new Set(GeoData.paises.filter((p) => !(p.population_m >= 1)).map((p) => String(p.iso_n3)));
+  for (let seed = 1; seed <= 30; seed++) {
+    for (const q of Quiz.generate('world_flags', 30, mulberry32(seed))) {
+      const ids = [q.itemKey.split(':')[1], ...q.options.map((o) => o.id.slice(5))];
+      for (const id of ids) {
+        assert.ok(!small.has(id), 'country under 1M asked or offered: ' + id);
+        assert.ok(!DISPUTED.has(id) && !paisById.get(id).disputed, 'disputed country asked or offered: ' + id);
+      }
+      assert.equal(q.options.length, 5);
+      assert.equal(new Set(q.options.map((o) => o.id)).size, 5);
+    }
+  }
+});
+
+test('world_flags prefers same-continent distractors', () => {
+  let same = 0;
+  let total = 0;
+  let fallbackSeen = 0;
+  for (let seed = 1; seed <= 40; seed++) {
+    for (const q of Quiz.generate('world_flags', 30, mulberry32(seed))) {
+      const cont = paisById.get(q.itemKey.split(':')[1]).continent;
+      const others = q.options.filter((o) => o.id !== q.answerId);
+      const sameCount = others.filter((o) => paisById.get(o.id.slice(5)).continent === cont).length;
+      total++;
+      if (sameCount === 4) same++;
+      if (sameCount < 4) fallbackSeen++;
+    }
+  }
+  assert.ok(total > 0);
+  assert.ok(same / total > 0.9, `only ${same}/${total} had 4 same-continent distractors`);
+  assert.ok(fallbackSeen > 0, 'expected some fallback for continents with fewer than 5 eligible countries');
+});
+
+test('world_flags is deterministic with a seed', () => {
+  assert.deepEqual(Quiz.generate('world_flags', 30, mulberry32(7)), Quiz.generate('world_flags', 30, mulberry32(7)));
+  assert.notDeepEqual(Quiz.generate('world_flags', 30, mulberry32(7)), Quiz.generate('world_flags', 30, mulberry32(8)));
 });
 
 test('world topics ask both directions', () => {
